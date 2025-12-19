@@ -1,0 +1,46 @@
+# Package managers (will be auto-downloaded)
+elpaca/
+elpa/
+
+# TLDR pages (auto-downloaded)
+tldr/
+
+# Compiled elisp
+*.elc
+eln-cache/
+
+# Backup and autosave files
+*~
+\#*\#
+auto-save-list/
+
+# Session and state files
+recentf
+sessions
+bookmarks
+projectile-bookmarks.eld
+projects
+eshell/history
+.lsp-session*
+.cache/
+
+# Transient files
+transient/
+url/
+request/
+
+# Tree-sitter grammars (auto-downloaded)
+tree-sitter/
+
+# Org mode generated
+*.org_archive
+
+# Local customizations (optional - remove if you want to track)
+# custom.el
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.dir-locals.el
