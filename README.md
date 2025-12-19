@@ -43,6 +43,39 @@ sudo pacman -S cmake libtool libvterm
 - `scripts/` - Custom elisp modules
 - `themes/` - Custom themes
 
+## Running as Server/Client
+
+This config is designed to run Emacs as a daemon for instant startup:
+
+```bash
+# Start the daemon (once, or add to autostart)
+emacs --daemon
+
+# Connect with emacsclient
+emacsclient -c           # New GUI frame
+emacsclient -t           # Terminal frame
+emacsclient -c file.txt  # Open file in new frame
+```
+
+To auto-start the daemon on login, create a systemd user service:
+
+```bash
+# ~/.config/systemd/user/emacs.service
+[Unit]
+Description=Emacs Daemon
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/emacs --daemon
+ExecStop=/usr/bin/emacsclient --eval "(kill-emacs)"
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
+```
+
+Then enable with: `systemctl --user enable --now emacs`
+
 ## Features
 
 - Evil mode (Vim keybindings)
