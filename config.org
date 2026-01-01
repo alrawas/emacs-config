@@ -201,6 +201,12 @@
     "m T" '(org-todo-list :wk "Org todo list"))
 
   (dt/leader-keys
+    "m j" '(:ignore t :wk "Journal")
+    "m j j" '(org-journal-new-entry :wk "New entry")
+    "m j o" '(org-journal-open-current-journal-file :wk "Open today")
+    "m j s" '(org-journal-search :wk "Search journal"))
+
+  (dt/leader-keys
     "m b" '(:ignore t :wk "Tables")
     "m b -" '(org-table-insert-hline :wk "Insert hline in table"))
 
@@ -488,7 +494,6 @@ By default, Emacs requires you to hit ESC three times to escape quit the minibuf
 (setq org-agenda-files
       '("~/org/inbox.org"
         "~/org/tasks.org"
-        "~/org/journal.org"
         "~/org/dashboard.org"
         "~/org/lifeplan.org"))
 
@@ -496,9 +501,7 @@ By default, Emacs requires you to hit ESC three times to escape quit the minibuf
 (setq org-default-notes-file (concat org-directory "inbox.org"))
 (setq org-capture-templates
       '(("t" "Todo" entry (file "inbox.org")
-         "* TODO %? \n  %U")
-        ("j" "Journal" entry (file+olp+datetree "journal.org")
-         "* %? \nEntered on %T\n")))
+         "* TODO %? \n  %U")))
 
 ;; Keybinding (check mc keybindings in its section)
 ;; C-c C-t to switch state to a target state
@@ -541,6 +544,25 @@ By default, Emacs requires you to hit ESC three times to escape quit the minibuf
 (setq org-agenda-show-log t)
 (setq org-agenda-include-diary t)
 
+#+end_src
+
+* ORG JOURNAL
+Daily journal with each day in its own file.
+
+#+begin_src emacs-lisp
+(use-package org-journal
+  :ensure t
+  :defer t
+  :init
+  (setq org-journal-dir "~/org/journal/"
+        org-journal-date-format "%A, %d %B %Y"
+        org-journal-file-format "%Y-%m-%d.org"
+        org-journal-file-type 'daily
+        org-journal-find-file 'find-file)
+  :config
+  ;; Include journal files in agenda
+  (setq org-agenda-file-regexp "\\`[^.].*\\.org\\'")
+  (add-to-list 'org-agenda-files org-journal-dir))
 #+end_src
 
 * MODELINE
