@@ -86,7 +86,8 @@
 (setq org-return-follows-link t)
 
 ;; Bind RET in normal mode for org-mode to follow links (not insert newline)
-(evil-define-key 'normal org-mode-map (kbd "RET") 'org-return)
+(with-eval-after-load 'evil
+  (evil-define-key 'normal org-mode-map (kbd "RET") 'org-return))
 
 ;;Turns off elpaca-use-package-mode current declartion
 ;;Note this will cause the declaration to be interpreted immediately (not deferred).
