@@ -34,6 +34,7 @@ tree-sitter/
 
 # Org mode generated
 *.org_archive
+config.el
 
 # Local customizations (optional - remove if you want to track)
 # custom.el

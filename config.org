@@ -24,6 +24,7 @@
 - [[#language-support][LANGUAGE SUPPORT]]
 - [[#minibuffer-escape][MINIBUFFER ESCAPE]]
 - [[#my-gtd][MY GTD]]
+- [[#org-journal][ORG JOURNAL]]
 - [[#modeline][MODELINE]]
 - [[#neotree][NEOTREE]]
 - [[#org-mode][ORG MODE]]
@@ -508,7 +509,7 @@ By default, Emacs requires you to hit ESC three times to escape quit the minibuf
 ;; C-c C-s to add schedule time
 ;; C-c C-d to add deadline time
 (setq org-todo-keywords
-      '((sequence "TODO(t!)" "NEXT(n!)" "PROG(p!)" "WAIT(w!)" "HOLD(h!)" "|" "DONE(d!)" "DELEGATED(l!)" "KILL(k!)")))
+      '((sequence "TODO(t)" "NEXT(n)" "PROG(p)" "WAIT(w)" "HOLD(h)" "|" "DONE(d)" "DELEGATED(l)" "KILL(k)")))
 
 
 ;; NEVER let calendar take entire frame
@@ -534,9 +535,8 @@ By default, Emacs requires you to hit ESC three times to escape quit the minibuf
 (setq org-refile-allow-creating-parent-nodes 'confirm)
 
 ;; agenda logs
-;; Log state changes into a LOGBOOK drawer
-(setq org-log-into-drawer t)
-;; Log when marking a task DONE (with timestamp)
+;; Disable automatic LOGBOOK entries - add deadlines/notes manually
+(setq org-log-into-drawer nil)
 (setq org-log-done 'time)
 (setq org-agenda-start-with-log-mode t)
 
@@ -555,10 +555,14 @@ Daily journal with each day in its own file.
   :defer t
   :init
   (setq org-journal-dir "~/org/journal/"
-        org-journal-date-format "%A, %d %B %Y"
+        org-journal-date-format "[%Y-%m-%d %A]"
         org-journal-file-format "%Y-%m-%d.org"
         org-journal-file-type 'daily
-        org-journal-find-file 'find-file)
+        org-journal-find-file 'find-file
+        org-journal-enable-agenda-integration t
+        org-journal-date-prefix "* "
+        org-journal-time-prefix "** "
+        org-journal-time-format "[%Y-%m-%d %a %H:%M] ")
   :config
   ;; Include journal files in agenda
   (setq org-agenda-file-regexp "\\`[^.].*\\.org\\'")
@@ -832,7 +836,7 @@ The first of the two lines below designates the directory where will place all o
 With Emacs version 29, true transparency has been added.  
 
 #+begin_src emacs-lisp
-(add-to-list 'default-frame-alist '(alpha-background . 95)) ; For all new frames henceforth
+;; (add-to-list 'default-frame-alist '(alpha-background . 95)) ; For all new frames henceforth
 #+end_src
 
 * WHICH-KEY
