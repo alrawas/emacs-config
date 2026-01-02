@@ -836,7 +836,7 @@ The first of the two lines below designates the directory where will place all o
 With Emacs version 29, true transparency has been added.  
 
 #+begin_src emacs-lisp
-;; (add-to-list 'default-frame-alist '(alpha-background . 95)) ; For all new frames henceforth
+(add-to-list 'default-frame-alist '(alpha-background . 95)) ; For all new frames henceforth
 #+end_src
 
 * WHICH-KEY
