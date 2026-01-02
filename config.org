@@ -86,8 +86,14 @@
 (setq org-return-follows-link t)
 
 ;; Bind RET in normal mode for org-mode to follow links (not insert newline)
+(defun my/org-return-follow-link ()
+  "Follow link at point if on a link, otherwise do nothing in normal mode."
+  (interactive)
+  (when (org-in-regexp org-link-any-re)
+    (org-open-at-point)))
+
 (with-eval-after-load 'evil
-  (evil-define-key 'normal org-mode-map (kbd "RET") 'org-return))
+  (evil-define-key 'normal org-mode-map (kbd "RET") 'my/org-return-follow-link))
 
 ;;Turns off elpaca-use-package-mode current declartion
 ;;Note this will cause the declaration to be interpreted immediately (not deferred).
