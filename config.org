@@ -146,7 +146,8 @@
     "b R" '(rename-buffer :wk "Rename buffer")
     "b s" '(basic-save-buffer :wk "Save buffer")
     "b S" '(save-some-buffers :wk "Save multiple buffers")
-    "b w" '(bookmark-save :wk "Save current bookmarks to bookmark file"))
+    "b w" '(bookmark-save :wk "Save current bookmarks to bookmark file")
+    "b x" '(scratch-buffer :wk "Switch to scratch buffer"))
   
   (dt/leader-keys
     "d" '(:ignore t :wk "Dired")
@@ -207,9 +208,12 @@
     "m c" '(org-capture :wk "Org capture")
     "m e" '(org-export-dispatch :wk "Org export dispatch")
     "m i" '(org-toggle-item :wk "Org toggle item")
+    "m m" '((lambda () (interactive) (org-tags-view t)) :wk "Match tags (skip DONE)")
     "m t" '(org-todo :wk "Org todo")
     "m B" '(org-babel-tangle :wk "Org babel tangle")
-    "m T" '(org-todo-list :wk "Org todo list"))
+    "m T" '(org-todo-list :wk "Org todo list")
+    "m A" '(org-archive-subtree :wk "Archive subtree")
+    "m D" '(my/org-archive-done-tasks :wk "Archive all DONE"))
 
   (dt/leader-keys
     "m j" '(:ignore t :wk "Journal")
@@ -389,20 +393,20 @@ Install =luacheck= from your Linux distro's repositories for flycheck to work co
 * FONTS
 #+begin_src emacs-lisp
 ;; Set fonts only if they exist (safe version)
-(when (find-font (font-spec :name "IosevkaTerm Nerd Font"))
+(when (find-font (font-spec :name "IosevkaTerm Nerd Font Mono"))
   (set-face-attribute 'default nil
-                      :font "IosevkaTerm Nerd Font"
+                      :font "IosevkaTerm Nerd Font Mono"
                       :height 100
                       :weight 'normal)
   (set-face-attribute 'fixed-pitch nil
-                      :font "IosevkaTerm Nerd Font"
+                      :font "IosevkaTerm Nerd Font Mono"
                       :height 100
                       :weight 'normal)
-  (add-to-list 'default-frame-alist '(font . "IosevkaTerm Nerd Font")))
+  (add-to-list 'default-frame-alist '(font . "IosevkaTerm Nerd Font Mono")))
 
-(when (find-font (font-spec :name "Ubuntu"))
+(when (find-font (font-spec :name "Ubuntu Mono"))
   (set-face-attribute 'variable-pitch nil
-                      :font "Ubuntu"
+                      :font "Ubuntu Mono"
                       :height 120
                       :weight 'normal))
 
@@ -506,7 +510,8 @@ By default, Emacs requires you to hit ESC three times to escape quit the minibuf
       '("~/org/inbox.org"
         "~/org/tasks.org"
         "~/org/dashboard.org"
-        "~/org/lifeplan.org"))
+        "~/org/lifeplan.org"
+        "~/org/projects"))
 
 (require 'org-capture)
 (setq org-default-notes-file (concat org-directory "inbox.org"))
@@ -543,6 +548,18 @@ By default, Emacs requires you to hit ESC three times to escape quit the minibuf
 (setq org-refile-use-outline-path 'file)
 (setq org-outline-path-complete-in-steps nil)
 (setq org-refile-allow-creating-parent-nodes 'confirm)
+
+;; Archive
+(setq org-archive-location "~/org/archive.org::* %s")
+
+(defun my/org-archive-done-tasks ()
+  "Archive all DONE tasks in the current buffer."
+  (interactive)
+  (org-map-entries
+   (lambda ()
+     (org-archive-subtree)
+     (setq org-map-continue-from (org-element-property :begin (org-element-at-point))))
+   "/DONE" 'file))
 
 ;; agenda logs
 ;; Disable automatic LOGBOOK entries - add deadlines/notes manually
@@ -659,6 +676,27 @@ Org-tempo is not a separate package but a module within org that can be enabled.
 
 #+begin_src emacs-lisp 
 (require 'org-tempo)
+#+end_src
+
+** Auto Frontmatter for New Org Files
+Automatically insert org frontmatter (title, date, author, description, filetags) when creating a new =.org= file.  The title is derived from the filename, and the date is set to the current date.
+
+#+begin_src emacs-lisp
+(defun my/org-auto-frontmatter ()
+  "Insert org frontmatter when a new org file is created."
+  (when (and (eq major-mode 'org-mode)
+             (= (buffer-size) 0))
+    (let* ((filename (file-name-sans-extension
+                      (file-name-nondirectory (buffer-file-name))))
+           (title (replace-regexp-in-string "[_-]" " " filename))
+           (title (capitalize title))
+           (date (format-time-string "[%Y-%m-%d %a]")))
+      (insert (format "#+title: %s\n#+date: %s\n#+author: %s\n#+description: \n#+filetags: \n\n"
+                      title date user-login-name))
+      (search-backward "#+description: ")
+      (end-of-line))))
+
+(add-hook 'find-file-hook #'my/org-auto-frontmatter)
 #+end_src
 
 * PERSPECTIVE
