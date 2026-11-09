@@ -44,7 +44,9 @@ Everything downloaded is one list, `package-selected-packages`, under
 Eglot (built in) talks to them; nothing else to configure.
 
 - **Go:** `go install golang.org/x/tools/gopls@latest`
-- **Java:** `jdtls` on PATH. It needs Java 21+ to run; projects can target older Java.
+- **Java:** `jdtls` on PATH. jdtls 1.61.0 is the last release that runs on
+  Java 21; 1.62.0 and later need Java 25. Projects can target older Java
+  either way.
 - **Search:** `rg` (ripgrep) for `SPC s r`
 
 A GUI Emacs started from the desktop doesn't get the shell's PATH, so

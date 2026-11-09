@@ -65,9 +65,22 @@
 (use-package emacs
   :custom
   (inhibit-startup-screen t)            ; start in *scratch*
-  (initial-scratch-message
-   (concat ";; SPC ,    buffers, recent files, bookmarks     SPC p p  projects\n"
-           ";; SPC r m  bookmark this spot                    SPC h    help (C-h)\n\n"))
+  (initial-scratch-message "\
+;; ARAWAS Emacs.  SPC is the leader; M-SPC in insert state.
+;; Leader letters mirror Emacs: SPC h = C-h, SPC p = C-x p, SPC r = C-x r,
+;; SPC w = C-w, SPC x = C-x.  Anything you read in the manual works.
+;;
+;; SPC ,    buffers, recent files, bookmarks  SPC .    find a file
+;; SPC SPC  run a command (M-x)               SPC s r  search the project
+;; SPC p p  switch project, then f g m e      SPC g g  magit
+;; SPC r m  bookmark this spot                SPC r b  jump to a bookmark
+;; SPC c a  code actions (also gd, K, C-o)    SPC h k  what does a key do?
+;; SPC m c  capture a note                    SPC m w  write today
+;; SPC a    todo.txt                          SPC b k  close this buffer
+;;
+;; Config: SPC f c (zM folds it).  Guide: ~/.config/emacs/docs/index.html
+
+")
   (ring-bell-function #'ignore)         ; no beeping
   (create-lockfiles nil)                ; no .#file symlinks next to your files
   (backup-directory-alist               ; file~ backups go here, not next to the file
@@ -98,10 +111,8 @@
   (evil-split-window-below t)           ; :split opens below
   (evil-vsplit-window-right t)          ; :vsplit opens on the right
   :config
-  (evil-mode 1)
-  ;; RET does what the mode wants (follow a link, open a file or result)
-  ;; instead of evil's "move down a line".
-  (keymap-unset evil-motion-state-map "RET"))
+  (evil-mode 1))                        ; RET in normal state moves down, as in vim;
+                                        ; org binds it to follow links (see Org)
 
 (use-package evil-collection            ; vim keys for dired, magit, help, ...
   :after evil

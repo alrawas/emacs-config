@@ -237,12 +237,23 @@ footer { padding-block: 3.5rem 1rem; color: var(--muted); font-size: var(--step-
   </div>
   <figure class="frame" aria-label="What Emacs shows right after it starts">
     <div class="buf">
-      <div class="ln"><span class="num">1</span><span class="c">;; SPC ,    buffers, recent files, bookmarks     SPC p p  projects</span></div>
-      <div class="ln"><span class="num">2</span><span class="c">;; SPC r m  bookmark this spot                    SPC h    help (C-h)</span></div>
-      <div class="ln"><span class="num">3</span></div>
-      <div class="ln"><span class="num">4</span><span class="cursor"> </span></div>
+      <div class="ln"><span class="num">1</span><span class="c">;; ARAWAS Emacs.  SPC is the leader; M-SPC in insert state.</span></div>
+      <div class="ln"><span class="num">2</span><span class="c">;; Leader letters mirror Emacs: SPC h = C-h, SPC p = C-x p, SPC r = C-x r,</span></div>
+      <div class="ln"><span class="num">3</span><span class="c">;; SPC w = C-w, SPC x = C-x.  Anything you read in the manual works.</span></div>
+      <div class="ln"><span class="num">4</span><span class="c">;;</span></div>
+      <div class="ln"><span class="num">5</span><span class="c">;; SPC ,    buffers, recent files, bookmarks  SPC .    find a file</span></div>
+      <div class="ln"><span class="num">6</span><span class="c">;; SPC SPC  run a command (M-x)               SPC s r  search the project</span></div>
+      <div class="ln"><span class="num">7</span><span class="c">;; SPC p p  switch project, then f g m e      SPC g g  magit</span></div>
+      <div class="ln"><span class="num">8</span><span class="c">;; SPC r m  bookmark this spot                SPC r b  jump to a bookmark</span></div>
+      <div class="ln"><span class="num">9</span><span class="c">;; SPC c a  code actions (also gd, K, C-o)    SPC h k  what does a key do?</span></div>
+      <div class="ln"><span class="num">10</span><span class="c">;; SPC m c  capture a note                    SPC m w  write today</span></div>
+      <div class="ln"><span class="num">11</span><span class="c">;; SPC a    todo.txt                          SPC b k  close this buffer</span></div>
+      <div class="ln"><span class="num">12</span><span class="c">;;</span></div>
+      <div class="ln"><span class="num">13</span><span class="c">;; Config: SPC f c (zM folds it).  Guide: ~/.config/emacs/docs/index.html</span></div>
+      <div class="ln"><span class="num">14</span></div>
+      <div class="ln"><span class="num">15</span><span class="cursor"> </span></div>
     </div>
-    <div class="ml">-UUU:---  <b>*scratch*</b>      All   L4    &lt;N&gt;   (Lisp Interaction company WK ElDoc)</div>
+    <div class="ml">-UUU:---  <b>*scratch*</b>      All   L15   &lt;N&gt;   (Lisp Interaction company WK ElDoc)</div>
     <div class="echo">For information about GNU Emacs and the GNU system, type SPC h C-a.</div>
   </figure>
   <dl class="facts">
@@ -319,7 +330,7 @@ footer { padding-block: 3.5rem 1rem; color: var(--muted); font-size: var(--step-
     </article>
     <article class="card">
       <h3>Write Java</h3>
-      <p>Same keys as Go once jdtls is installed. You already set Java 21 as the default, which is what jdtls needs to run. Installing jdtls is the one step left; see <a href="#server">the commands below</a>.</p>
+      <p>Same keys as Go. jdtls 1.61.0 lives in <code>~/.local/share/jdtls</code> and starts by itself when you open a <code>.java</code> file. It's the last release that runs on Java 21; 1.62.0 and later need Java 25.</p>
     </article>
     <article class="card">
       <h3>Notes and writing</h3>
@@ -441,9 +452,9 @@ set -as terminal-features ',alacritty:RGB'</pre><button class="copy" type="butto
 sudo apt install ripgrep</pre><button class="copy" type="button" data-copy="c4">Copy</button></div>
     </div></li>
     <li><div>
-      <p>Java, on any machine: download jdtls and put its launcher on your PATH. Then add Maven or Gradle if your projects use them.</p>
+      <p>Java, on any machine with Java 21: install jdtls 1.61.0, the last release that runs on it (newer ones need Java 25), and put its launcher on your PATH. Add Maven or Gradle if your projects use them.</p>
       <div class="cmdline"><pre id="c5">mkdir -p ~/.local/share/jdtls
-curl -L https://download.eclipse.org/jdtls/snapshots/jdt-language-server-latest.tar.gz | tar -xz -C ~/.local/share/jdtls
+curl -L https://download.eclipse.org/jdtls/milestones/1.61.0/jdt-language-server-1.61.0-202609031315.tar.gz | tar -xz -C ~/.local/share/jdtls
 ln -s ~/.local/share/jdtls/bin/jdtls ~/.local/bin/jdtls
 sdk install maven</pre><button class="copy" type="button" data-copy="c5">Copy</button></div>
     </div></li>
@@ -470,7 +481,8 @@ sdk install maven</pre><button class="copy" type="button" data-copy="c5">Copy</b
       <ul>
         <li>Line numbers show only in code and text. Long lines wrap only in prose.</li>
         <li>The completion popup appears only in code, so writing in org stays quiet.</li>
-        <li><kbd>RET</kbd> indents new lines again.</li>
+        <li><kbd>RET</kbd> in normal state moves down a line, as in vim, instead of inserting one. On an org link it follows the link.</li>
+        <li>In insert state, <kbd>RET</kbd> indents the new line again.</li>
         <li>Backups go to <code>~/.config/emacs/backups/</code> instead of <code>~/.Trash</code>.</li>
         <li>Startup opens <code>*scratch*</code>. There is no dashboard.</li>
         <li>Org no longer adds <code>org-capture-last-stored</code> bookmarks.</li>
