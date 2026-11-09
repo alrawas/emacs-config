@@ -110,6 +110,7 @@ p { margin: 0; }
 .frame .ln { white-space: pre; display: flex; min-height: 1.5em; }
 .frame .num { color: var(--muted); opacity: 0.7; width: 3.2ch; text-align: right; padding-right: 1.4ch; flex: none; }
 .frame .c { color: var(--muted); }
+.frame .nb { white-space: nowrap; }     /* keep a key like C-x p together when lines wrap */
 .cursor { background: var(--mark); color: var(--mark-ink); animation: blink 1.1s steps(1) infinite; }
 @keyframes blink { 50% { background: transparent; } }
 @media (prefers-reduced-motion: reduce) { .cursor { animation: none; } }
@@ -216,7 +217,7 @@ footer { padding-block: 3.5rem 1rem; color: var(--muted); font-size: var(--step-
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-.modeline .ml-inner { max-width: 72rem; margin: 0 auto; display: flex; gap: 1.1rem; align-items: center; height: 2.3rem; overflow-x: auto; white-space: nowrap; }
+.modeline .ml-inner { position: relative; max-width: 72rem; margin: 0 auto; display: flex; gap: 1.1rem; align-items: center; height: 2.3rem; overflow-x: auto; white-space: nowrap; }
 .modeline .flag { color: var(--muted); }
 .modeline .name { color: var(--fg); font-weight: 600; }
 .modeline .pos { color: var(--muted); min-width: 3ch; font-variant-numeric: tabular-nums; }
@@ -224,6 +225,24 @@ footer { padding-block: 3.5rem 1rem; color: var(--muted); font-size: var(--step-
 .modeline .modes a { color: var(--fg); text-decoration: none; padding: 0.15rem 0.2rem; border-radius: 3px; }
 .modeline .modes a:hover { color: var(--accent); }
 .modeline .modes a[aria-current="true"] { background: var(--mark); color: var(--mark-ink); }
+
+/* ---- phones: wrap the scratch mock like visual-line-mode, give the mode line to the links ---- */
+@media (max-width: 40rem) {
+  section { padding-block: 2.25rem 0; }
+  .frame { font-size: 0.74rem; }
+  .frame .ln { white-space: pre-wrap; }
+  .frame .ln > span:last-child { min-width: 0; }
+  .frame .num { width: 2.6ch; padding-right: 1ch; }
+  .frame .ml, .frame .echo { white-space: pre-wrap; }
+  .tree { font-size: 0.78rem; }
+  .cmdline { flex-direction: column; }
+  .copy { align-self: flex-start; padding: 0.4rem 0.9rem; }
+  .minibuf { flex-wrap: wrap; }
+  .minibuf input { flex: 1 1 9rem; }
+  .modeline .flag, .modeline .name { display: none; }
+  .modeline .ml-inner { gap: 0.5rem; height: 2.75rem; }
+  .modeline .modes a { display: inline-block; padding: 0.45rem 0.4rem; }
+}
 </style>
 </head>
 <body>
@@ -237,15 +256,15 @@ footer { padding-block: 3.5rem 1rem; color: var(--muted); font-size: var(--step-
   </div>
   <figure class="frame" aria-label="What Emacs shows right after it starts">
     <div class="buf">
-      <div class="ln"><span class="num">1</span><span class="c">;; ARAWAS Emacs.  SPC is the leader; M-SPC in insert state.</span></div>
-      <div class="ln"><span class="num">2</span><span class="c">;; Leader letters mirror Emacs: SPC h = C-h, SPC p = C-x p, SPC r = C-x r,</span></div>
-      <div class="ln"><span class="num">3</span><span class="c">;; SPC w = C-w, SPC x = C-x.  Anything you read in the manual works.</span></div>
+      <div class="ln"><span class="num">1</span><span class="c">;; ARAWAS Emacs.  SPC is the leader; <span class="nb">M-SPC</span> in insert state.</span></div>
+      <div class="ln"><span class="num">2</span><span class="c">;; Leader letters mirror Emacs: <span class="nb">SPC h = C-h,</span> <span class="nb">SPC p = C-x p,</span> <span class="nb">SPC r = C-x r,</span></span></div>
+      <div class="ln"><span class="num">3</span><span class="c">;; <span class="nb">SPC w = C-w,</span> <span class="nb">SPC x = C-x.</span>  Anything you read in the manual works.</span></div>
       <div class="ln"><span class="num">4</span><span class="c">;;</span></div>
       <div class="ln"><span class="num">5</span><span class="c">;; SPC ,    buffers, recent files, bookmarks  SPC .    find a file</span></div>
-      <div class="ln"><span class="num">6</span><span class="c">;; SPC SPC  run a command (M-x)               SPC s r  search the project</span></div>
+      <div class="ln"><span class="num">6</span><span class="c">;; SPC SPC  run a command <span class="nb">(M-x)</span>               SPC s r  search the project</span></div>
       <div class="ln"><span class="num">7</span><span class="c">;; SPC p p  switch project, then f g m e      SPC g g  magit</span></div>
       <div class="ln"><span class="num">8</span><span class="c">;; SPC r m  bookmark this spot                SPC r b  jump to a bookmark</span></div>
-      <div class="ln"><span class="num">9</span><span class="c">;; SPC c a  code actions (also gd, K, C-o)    SPC h k  what does a key do?</span></div>
+      <div class="ln"><span class="num">9</span><span class="c">;; SPC c a  code actions (also gd, K, <span class="nb">C-o)</span>    SPC h k  what does a key do?</span></div>
       <div class="ln"><span class="num">10</span><span class="c">;; SPC m c  capture a note                    SPC m w  write today</span></div>
       <div class="ln"><span class="num">11</span><span class="c">;; SPC a    todo.txt                          SPC b k  close this buffer</span></div>
       <div class="ln"><span class="num">12</span><span class="c">;;</span></div>
@@ -254,7 +273,7 @@ footer { padding-block: 3.5rem 1rem; color: var(--muted); font-size: var(--step-
       <div class="ln"><span class="num">15</span><span class="cursor"> </span></div>
     </div>
     <div class="ml">-UUU:---  <b>*scratch*</b>      All   L15   &lt;N&gt;   (Lisp Interaction company WK ElDoc)</div>
-    <div class="echo">For information about GNU Emacs and the GNU system, type SPC h C-a.</div>
+    <div class="echo">For information about GNU Emacs and the GNU system, type <span class="nb">SPC h C-a.</span></div>
   </figure>
   <dl class="facts">
     <div><dt>startup</dt><dd>0.2–0.6 s <small>was 2–3 s</small></dd></div>
@@ -813,8 +832,17 @@ sdk install maven</pre><button class="copy" type="button" data-copy="c5">Copy</b
 
   // ---- the mode line: position and current section, like Emacs ----
   var posEl = document.getElementById("ml-pos");
+  var bar = document.querySelector(".modeline .ml-inner");
   var links = Array.prototype.slice.call(document.querySelectorAll(".modeline .modes a"));
   var sections = links.map(function (a) { return document.querySelector(a.getAttribute("href")); });
+  var lastCurrent = -2;
+  function keepInView(a) {
+    // On a narrow screen the links scroll sideways; keep the current one visible.
+    var left = a.offsetLeft, right = left + a.offsetWidth;
+    if (left < bar.scrollLeft || right > bar.scrollLeft + bar.clientWidth) {
+      bar.scrollLeft = Math.max(0, left - 24);
+    }
+  }
   function onScroll() {
     var doc = document.documentElement;
     var max = doc.scrollHeight - window.innerHeight;
@@ -828,6 +856,10 @@ sdk install maven</pre><button class="copy" type="button" data-copy="c5">Copy</b
       if (i === current) a.setAttribute("aria-current", "true");
       else a.removeAttribute("aria-current");
     });
+    if (current !== lastCurrent) {
+      lastCurrent = current;
+      if (current >= 0) keepInView(links[current]);
+    }
   }
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", onScroll);
