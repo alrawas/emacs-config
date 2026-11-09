@@ -62,7 +62,7 @@ body {
   font: 400 var(--step-0)/1.6 var(--body);
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 0 5rem;
+  padding-block: 0 calc(5rem + env(safe-area-inset-bottom, 0px));
 }
 a { color: var(--key); text-underline-offset: 0.18em; }
 a:focus-visible, button:focus-visible, input:focus-visible, label:focus-within {
@@ -195,13 +195,13 @@ p { margin: 0; }
 @media (max-width: 34rem) { .howto li { grid-template-columns: 1fr; } }
 
 /* shell commands with copy */
-.cmdline { display: flex; gap: 0.5rem; align-items: stretch; margin: 0; }
+.cmdline { display: flex; gap: 0.5rem; align-items: stretch; margin: 0; min-width: 0; }
 .cmdline pre { flex: 1; min-width: 0; margin: 0; overflow-x: auto; background: var(--bg-1); border: 1px solid var(--line); border-radius: 6px; padding: 0.6rem 0.8rem; font-family: var(--mono); font-size: 0.88rem; color: var(--fg); }
 .cmdline pre .c { color: var(--muted); }
 .copy { flex: none; font: inherit; font-family: var(--mono); font-size: var(--step--1); color: var(--fg); background: var(--bg-2); border: 1px solid var(--line); border-radius: 6px; padding: 0 0.8rem; cursor: pointer; }
 .copy:hover { border-color: var(--accent); }
-.server { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 1.1rem; }
-.server > li { display: grid; grid-template-columns: 2rem 1fr; gap: 0.6rem; counter-increment: s; }
+.server { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.1rem; }
+.server > li { display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: 0.6rem; counter-increment: s; min-width: 0; }
 .server > li::before { content: counter(s); font-family: var(--display); color: var(--accent); }
 .server > li > div { display: grid; gap: 0.5rem; min-width: 0; }
 .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 1.5rem 2.5rem; }
@@ -234,14 +234,18 @@ footer { padding-block: 3.5rem 1rem; color: var(--muted); font-size: var(--step-
   .frame .ln > span:last-child { min-width: 0; }
   .frame .num { width: 2.6ch; padding-right: 1ch; }
   .frame .ml, .frame .echo { white-space: pre-wrap; }
-  .tree { font-size: 0.78rem; }
+  .tree { font-size: 0.72rem; padding: 0.8rem 0.75rem; }
   .cmdline { flex-direction: column; }
+  .cmdline pre { white-space: pre-wrap; overflow-wrap: anywhere; }  /* Copy still copies the exact text */
   .copy { align-self: flex-start; padding: 0.4rem 0.9rem; }
   .minibuf { flex-wrap: wrap; }
   .minibuf input { flex: 1 1 9rem; }
+  /* The mode line wraps to two rows so every section link stays visible. */
+  body { padding-block-end: calc(6.5rem + env(safe-area-inset-bottom, 0px)); }
   .modeline .flag, .modeline .name { display: none; }
-  .modeline .ml-inner { gap: 0.5rem; height: 2.75rem; }
-  .modeline .modes a { display: inline-block; padding: 0.45rem 0.4rem; }
+  .modeline .ml-inner { white-space: normal; height: auto; gap: 0 0.5rem; padding-block: 0.25rem; overflow-x: visible; align-items: baseline; }
+  .modeline .modes { flex: 1 1 0; min-width: 0; }
+  .modeline .modes a { display: inline-block; padding: 0.4rem 0.35rem; }
 }
 </style>
 </head>
@@ -406,19 +410,20 @@ footer { padding-block: 3.5rem 1rem; color: var(--muted); font-size: var(--step-
   </div>
   <div class="two">
 <pre class="tree"><span class="h">~/.config/emacs/</span>
-├── early-init.el   <span class="c">GC, font, transparency, evil prerequisites</span>
-├── init.el         <span class="c">everything else, top to bottom</span>
+├── early-init.el   <span class="c">startup, frame look</span>
+├── init.el         <span class="c">everything else</span>
 ├── lisp/
-│   ├── my-org-notes.el   <span class="c">life.org, writing/, frontmatter</span>
-│   ├── my-todotxt.el     <span class="c">header line, fixed archive</span>
+│   ├── my-org-notes.el   <span class="c">notes commands</span>
+│   ├── my-todotxt.el     <span class="c">todo.txt helpers</span>
 │   └── which-keymap.el   <span class="c">SPC h K</span>
-├── themes/         <span class="c">gruber-darker, soft-charcoal</span>
+├── themes/         <span class="c">gruber-darker</span>
+├── docs/index.html <span class="c">this guide</span>
 ├── README.md
-└── <span class="c">elpa/ recentf history projects ...  (not in git)</span></pre>
+└── <span class="c">elpa/, history ...  not in git</span></pre>
 <pre class="tree"><span class="c">;; init.el after zM</span>
 <span class="h">;;; Packages</span>...           <span class="c">the download list</span>
-<span class="h">;;; Where things are</span>...   <span class="c">PATH for go/java, lisp/</span>
-<span class="h">;;; Emacs itself</span>...       <span class="c">scratch, backups, numbers</span>
+<span class="h">;;; Where things are</span>...   <span class="c">PATH, lisp/</span>
+<span class="h">;;; Emacs itself</span>...       <span class="c">scratch, backups</span>
 <span class="h">;;; Evil</span>...
 <span class="h">;;; Leader key</span>...         <span class="c">every SPC binding</span>
 <span class="h">;;; Completion</span>...
