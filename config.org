@@ -22,15 +22,22 @@
 - [[#highlight-todo][HIGHLIGHT TODO]]
 - [[#ivy-counsel][IVY (COUNSEL)]]
 - [[#language-support][LANGUAGE SUPPORT]]
+- [[#magit][MAGIT]]
 - [[#minibuffer-escape][MINIBUFFER ESCAPE]]
-- [[#my-gtd][MY GTD]]
-- [[#org-journal][ORG JOURNAL]]
+- [[#tasks-and-journal][TASKS AND JOURNAL]]
+  - [[#files][Files]]
+  - [[#capture][Capture]]
+  - [[#todo-keywords][Todo keywords]]
+  - [[#refile][Refile]]
+  - [[#park-log-it][Park (log it)]]
+  - [[#agenda][Agenda]]
 - [[#modeline][MODELINE]]
 - [[#neotree][NEOTREE]]
 - [[#org-mode][ORG MODE]]
   - [[#enabling-table-of-contents][Enabling Table of Contents]]
   - [[#enabling-org-bullets][Enabling Org Bullets]]
   - [[#source-code-block-tag-expansion][Source Code Block Tag Expansion]]
+  - [[#auto-frontmatter-for-new-org-files][Auto Frontmatter for New Org Files]]
 - [[#perspective][PERSPECTIVE]]
 - [[#projectile][PROJECTILE]]
 - [[#rainbow-delimiters][RAINBOW DELIMITERS]]
@@ -57,6 +64,7 @@
 (require 'arawas-elpaca-setup)  ;; The Elpaca Package Manager
 (require 'buffer-move)   ;; Buffer-move for better window management
 (require 'app-launchers) ;; Use emacs as a run launcher like dmenu (experimental)
+(require 'which-keymap)  ;; SPC h K -- every active keymap that binds a key
 #+end_src
 
 ** Load Evil Mode
@@ -66,13 +74,20 @@
   :init      ;; tweak evil's configuration before loading it
   (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
   (setq evil-want-keybinding nil)
+  (setq evil-undo-system 'undo-redo) ;; C-r redoes, like vim -- built into Emacs 28+
   (setq evil-vsplit-window-right t)
   (setq evil-split-window-below t)
   (evil-mode))
 (use-package evil-collection
   :after evil
   :config
-  (setq evil-collection-mode-list '(dashboard dired ibuffer))
+  (setq evil-collection-mode-list
+        '(dashboard dired wdired ibuffer           ;; file & buffer managers
+          help apropos info man finder             ;; documentation buffers
+          compile flycheck grep xref replace imenu ;; results & navigation buffers
+          custom package-menu debug tabulated-list ;; built-in list UIs
+          magit magit-section                      ;; git porcelain
+          calendar neotree eshell ivy))
   (evil-collection-init))
 (use-package evil-tutor)
 
@@ -114,7 +129,7 @@
 
   ;; set up 'SPC' as the global leader key
   (general-create-definer dt/leader-keys
-    :states '(normal insert visual emacs)
+    :states '(normal insert visual emacs motion)
     :keymaps 'override
     :prefix "SPC" ;; set leader
     :global-prefix "M-SPC") ;; access leader in insert mode
@@ -168,6 +183,18 @@
 
 
   (dt/leader-keys
+    "g" '(:ignore t :wk "Git")
+    "g g" '(magit-status :wk "Magit status")
+    "g SPC" '(magit-dispatch :wk "Magit dispatch (all commands)")
+    "g f" '(magit-file-dispatch :wk "File dispatch")
+    "g b" '(magit-blame-addition :wk "Blame this file")
+    "g l" '(magit-log-current :wk "Log for this branch")
+    "g L" '(magit-log-buffer-file :wk "Log for this file")
+    "g d" '(magit-diff-buffer-file :wk "Diff this file")
+    "g c" '(magit-clone :wk "Clone a repository")
+    "g i" '(magit-init :wk "Init a repository"))
+
+  (dt/leader-keys
     "h" '(:ignore t :wk "Help")
     "h a" '(counsel-apropos :wk "Apropos")
     "h b" '(describe-bindings :wk "Describe bindings")
@@ -189,6 +216,7 @@
     "h i" '(info :wk "Info")
     "h I" '(describe-input-method :wk "Describe input method")
     "h k" '(describe-key :wk "Describe key")
+    "h K" '(my/which-keymap :wk "Which keymap bound this key")
     "h l" '(view-lossage :wk "Display recent keystrokes and the commands run")
     "h L" '(describe-language-environment :wk "Describe language environment")
     "h m" '(describe-mode :wk "Describe mode")
@@ -204,22 +232,16 @@
 
   (dt/leader-keys
     "m" '(:ignore t :wk "Org")
-    "m a" '(org-agenda :wk "Org agenda")
     "m c" '(org-capture :wk "Org capture")
     "m e" '(org-export-dispatch :wk "Org export dispatch")
     "m i" '(org-toggle-item :wk "Org toggle item")
-    "m m" '((lambda () (interactive) (org-tags-view t)) :wk "Match tags (skip DONE)")
     "m t" '(org-todo :wk "Org todo")
     "m B" '(org-babel-tangle :wk "Org babel tangle")
-    "m T" '(org-todo-list :wk "Org todo list")
-    "m A" '(org-archive-subtree :wk "Archive subtree")
-    "m D" '(my/org-archive-done-tasks :wk "Archive all DONE"))
+    "m l" '(my/org-open-life :wk "Open life.org")
+    "m w" '(my/org-write-today :wk "Write today"))
 
   (dt/leader-keys
-    "m j" '(:ignore t :wk "Journal")
-    "m j j" '(org-journal-new-entry :wk "New entry")
-    "m j o" '(org-journal-open-current-journal-file :wk "Open today")
-    "m j s" '(org-journal-search :wk "Search journal"))
+    "a" '(todotxt :wk "todo.txt"))
 
   (dt/leader-keys
     "m b" '(:ignore t :wk "Tables")
@@ -276,9 +298,20 @@
 
 
 * ALL THE ICONS
-This is an icon set that can be used with dashboard, dired, ibuffer and other Emacs programs.
+Two icon systems are in play, and they are not interchangeable.  =all-the-icons=
+serves dired, ivy-rich and the doom-themes neotree config; its glyphs come from
+six TTFs that =all-the-icons-install-fonts= downloads, or that can be copied
+straight out of =elpaca/repos/all-the-icons/fonts/= when GitHub is unreachable.
+
+=nerd-icons= is the newer one, and what doom-modeline 4.x and dashboard 1.9 both
+reach for first.  It asks for the family =Symbols Nerd Font Mono=, which is not
+installed here -- so point it at the Nerd Font that is, the same one the default
+face uses.  A =setq= before the package loads survives, since =defcustom= leaves
+an already-bound variable alone.
 
 #+begin_src emacs-lisp
+(setq nerd-icons-font-family "IosevkaTerm Nerd Font Mono")
+
 (use-package all-the-icons
   :ensure t
   :if (display-graphic-p))
@@ -328,20 +361,23 @@ Emacs Dashboard is an extensible startup screen showing you recent files, bookma
   (setq dashboard-set-file-icons t)
   (setq dashboard-banner-logo-title "Emacs Is More Than A Text Editor!")
   (setq dashboard-footer-messages '("Stay focused. Small wins."))
-  ;;(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
-  (setq dashboard-startup-banner "/home/dt/.config/emacs/images/emacs-dash.png")  ;; use custom image as banner
+  ;; 'logo or 'official for the two bundled Emacs logos, an integer for one of
+  ;; the built-in text banners, or a path to your own gif/png/xbm/txt.
+  (setq dashboard-startup-banner 'logo)
   (setq dashboard-vertically-center-content t)
   (setq dashboard-center-content t) ;; set to 't' for centered content
-  (setq org-agenda-window-setup 'other-window)
   (setq dashboard-items '((recents . 5)
                           (agenda . 7 )
                           (bookmarks . 3)
                           (projects . 3)
                           (registers . 3)))
-  :custom
-  (dashboard-modify-heading-icons '((recents . "file-text")
-                                    (bookmarks . "book")))
   :config
+  ;; `dashboard-modify-heading-icons' is a FUNCTION, so it belongs here and not
+  ;; under :custom, which would only set a variable nothing reads.  The names
+  ;; are nerd-icons ones, because `dashboard-icon-type' resolves to nerd-icons
+  ;; whenever that package is loadable.  There is no nf-oct-file_text.
+  (dashboard-modify-heading-icons '((recents . "nf-oct-file")
+                                    (bookmarks . "nf-oct-book")))
   (dashboard-setup-startup-hook))
 #+end_src
 
@@ -367,14 +403,26 @@ Install =luacheck= from your Linux distro's repositories for flycheck to work co
 #+end_src
 
 * DIRED
+=dired-open= hands a file to an external program based on its extension.  Naming
+programs directly means the config breaks on any machine that lacks them, and it
+breaks *silently*: with =dired-open-use-nohup= at its default =t= the handler
+runs =sh -c "nohup <prog> ..."=, =sh= always exists, so =start-process= returns a
+live process, =dired-open-by-extension= reports success, and =dired-open-file=
+never reaches its =dired-find-file= fallback.  The key just does nothing.
+
+=xdg-open= avoids all of that by following the desktop's own MIME handlers --
+here Loupe for images and VLC for video -- and keeps following them if those
+ever change.  =E= (=dired-do-open=) is the built-in equivalent in Emacs 30+.
+
 #+begin_src emacs-lisp
 (use-package dired-open
   :config
-  (setq dired-open-extensions '(("gif" . "sxiv")
-                                ("jpg" . "sxiv")
-                                ("png" . "sxiv")
-                                ("mkv" . "mpv")
-                                ("mp4" . "mpv"))))
+  (setq dired-open-extensions
+        (mapcar (lambda (ext) (cons ext "xdg-open"))
+                '("gif" "jpg" "jpeg" "png" "webp" "svg" "bmp"
+                  "mkv" "mp4" "webm" "avi" "mov" "gifv"
+                  "mp3" "flac" "ogg" "wav" "opus"
+                  "pdf" "epub" "odt" "docx" "xlsx"))))
 
 (use-package peep-dired
   :after dired
@@ -496,6 +544,54 @@ Emacs has built-in programming language modes for Lisp, Scheme, DSSSL, Ada, ASM,
 
 #+end_src
 
+* MAGIT
+Git porcelain.  Held behind =:commands= so magit's load cost -- it pulls in
+=transient=, =with-editor= and =compat= -- is paid the first time you press
+=SPC g g=, not at every startup.
+
+=magit-display-buffer-same-window-except-diff-v1= keeps the status buffer in the
+window you were already in; diffs and logs still get their own.  Without it
+magit splits the frame every time, which fights the single-window habit the rest
+of this config has.
+
+=magit= and =magit-section= are listed in =evil-collection-mode-list= up in
+*Load Evil Mode*, and they have to be: in evil's normal state =s= is
+=evil-substitute=, =u= is =evil-undo=, =x= is =evil-delete-char= and =c= is the
+=evil-change= operator -- which are magit's stage, unstage, discard and commit
+keys.  Without that entry the status buffer is unusable.
+
+The =compat= and =transient= lines are not optional here.  Emacs 30.2 bundles
+both -- =compat= 30.2.9999 and =transient= 0.7.2.2 -- and elpaca builds
+=elpaca-ignored-dependencies= from =package--builtin-versions=, so it will never
+install over a built-in unless the package is asked for *by name*.  Magit 4.7
+wants =compat= 31.1 and =transient= 0.13, so without these two declarations the
+install fails with "compat installed version 30.2.9999 lower than min required
+31.1", which then fails =llama=, then =with-editor=, then =magit=.
+
+No =elpaca-wait= is needed, and adding one here breaks the rest of this file:
+it splits elpaca's queue mid-config and aborts the load, so every section below
+MAGIT silently never runs.  It is also pointless, because =elpaca--check-version=
+prefers a *queued* order over a built-in no matter where in the queue it sits --
+=(unless dep (elpaca-alist-get id package--builtin-versions))=.  Declaring the
+two packages at all is the whole fix.
+
+#+begin_src emacs-lisp
+;; Install over the too-old built-ins.
+(use-package compat :demand t)
+(use-package transient :demand t)
+
+(use-package magit
+  :commands (magit-status magit-status-here magit-dispatch magit-file-dispatch
+             magit-blame-addition magit-log-current magit-log-buffer-file
+             magit-diff-buffer-file magit-clone magit-init)
+  :config
+  ;; Status in the window you came from; diffs and logs get their own.
+  (setq magit-display-buffer-function
+        #'magit-display-buffer-same-window-except-diff-v1)
+  ;; Highlight the changed words inside a changed line, not just the line.
+  (setq magit-diff-refine-hunk 'all))
+#+end_src
+
 * MINIBUFFER ESCAPE
 By default, Emacs requires you to hit ESC three times to escape quit the minibuffer.  
 
@@ -503,97 +599,153 @@ By default, Emacs requires you to hit ESC three times to escape quit the minibuf
 (global-set-key [escape] 'keyboard-escape-quit)
 #+end_src
 
-* MY GTD
+* ORG NOTES
+=~/org= is notes only: =life.org= for one-liners, =writing/= for prose, and
+=projects/= for reference. Tasks moved out to =~/org/todo.txt= -- see TODO.TXT.
+The monthly files, the Log, parking and the agenda views are retired to
+=~/org/old/months/=.
+
+| Key         | Does                                      |
+|-------------+-------------------------------------------|
+| =SPC a=     | open =todo.txt= (tasks live there now)    |
+| =SPC m l=   | open =life.org=                           |
+| =SPC m w=   | write today                               |
+| =SPC m c s= | capture a spark                           |
+| =SPC m c i= | capture something you learned             |
+| =SPC m c p= | capture a place to try                    |
+| =SPC m c q= | capture a book / film / game              |
+
+** Files
+=~/org= holds notes, not tasks. Tasks live in =~/org/todo.txt= -- see the
+TODO.TXT section. Nothing here is in =org-agenda-files=, so nothing in org can
+nag you.
+
+| Path                | What                                               |
+|---------------------+----------------------------------------------------|
+| =todo.txt=          | open tasks, one self-contained line each           |
+| =done.txt=          | archived completed lines                           |
+| =life.org=          | sparks / TIL / places / queue                      |
+| =writing/YYYY.org=  | one dated entry a day, prose                       |
+| =projects/=         | reference notes per project                        |
+| =old/=              | the retired monthly setup, kept for grep           |
+
 #+begin_src emacs-lisp
 (setq org-directory "~/org/")
-(setq org-agenda-files
-      '("~/org/inbox.org"
-        "~/org/tasks.org"
-        "~/org/dashboard.org"
-        "~/org/lifeplan.org"
-        "~/org/projects"))
+#+end_src
 
-(require 'org-capture)
-(setq org-default-notes-file (concat org-directory "inbox.org"))
+** Capture
+Four templates, all into =life.org=. Tasks are captured with =SPC T= or =tuxedo=,
+not here. =file+headline= creates the heading if it is missing.
+
+#+begin_src emacs-lisp
 (setq org-capture-templates
-      '(("t" "Todo" entry (file "inbox.org")
-         "* TODO %? \n  %U")))
+      '(("s" "Spark" entry (file+headline my/org-life-file "Sparks")
+         "* %<[%Y-%m-%d %a]> %?" :prepend t)
+        ("i" "Learned" entry (file+headline my/org-life-file "TIL")
+         "* %<[%Y-%m-%d %a]> %?" :prepend t)
+        ("p" "Place" entry (file+headline my/org-life-file "Places")
+         "* %<[%Y-%m-%d %a]> %? :want:" :prepend t)
+        ("q" "Queue" entry (file+headline my/org-life-file "Queue")
+         "* %<[%Y-%m-%d %a]> %? :want:" :prepend t)))
 
-;; Keybinding (check mc keybindings in its section)
-;; C-c C-t to switch state to a target state
-;; C-c C-s to add schedule time
-;; C-c C-d to add deadline time
-(setq org-todo-keywords
-      '((sequence "TODO(t)" "NEXT(n)" "PROG(p)" "WAIT(w)" "HOLD(h)" "|" "DONE(d)" "DELEGATED(l)" "KILL(k)")))
-
-
-;; NEVER let calendar take entire frame
+;; never let capture or the calendar take over the frame
 (setq org-capture-display-buffer-function #'display-buffer-below-selected)
-
-;; calendar/date popups as small window
-(setq org-agenda-window-setup 'current-window)
-
-;; allow "q" to exit cleanly
 (add-to-list 'display-buffer-alist
              '("\\*Calendar\\*" display-buffer-in-side-window
                (side . bottom)
                (window-height . 0.3)))
+#+end_src
 
-;; Refile
-(setq org-refile-targets
-      '(("~/org/tasks.org"    :maxlevel . 2)
-        ("~/org/lifeplan.org" :maxlevel . 3)
-        ("~/org/archive.org"  :maxlevel . 2)))
+** Life and writing
+Two files that are deliberately *not* in =org-agenda-files=, so nothing in them
+can ever nag you. =life.org= keeps one-line notes in the same grammar as the Log
+-- date, text, tag -- under four headings: Sparks, TIL, Places, Queue.
+=writing/YYYY.org= is the opposite: one dated entry per day, prose, as long as
+you like. It is split per year because it is the only one of these that grows.
 
+#+begin_src emacs-lisp
+(defun my/org-life-file ()
+  "Path to the one-liner file: sparks, things learned, places, queue."
+  (expand-file-name "life.org" org-directory))
+
+(defun my/org-open-life ()
+  "Open the life file."
+  (interactive)
+  (find-file (my/org-life-file)))
+
+(defun my/org-writing-file ()
+  "Path to this year's writing file, creating the directory if needed."
+  (make-directory (expand-file-name "writing" org-directory) t)
+  (expand-file-name (format-time-string "writing/%Y.org") org-directory))
+
+(defun my/org-write-today ()
+  "Open this year's writing file at today's entry, creating it at the top.
+Point lands after whatever is already written there, so a second sitting on the
+same day continues the same entry instead of starting a new one."
+  (interactive)
+  (find-file (my/org-writing-file))
+  (let ((today (format-time-string "* [%Y-%m-%d %a]")))
+    (goto-char (point-min))
+    (unless (search-forward today nil t)
+      ;; newest first, but below any #+keyword lines at the top
+      (goto-char (point-min))
+      (while (looking-at "^[#\n]") (forward-line 1))
+      (insert today "\n\n"))
+    (org-back-to-heading t)
+    (org-end-of-subtree t t)
+    (skip-chars-backward " \t\n")
+    (insert "\n"))
+  (recenter))
+#+end_src
+
+** Todo keywords
+#+begin_src emacs-lisp
+(setq org-todo-keywords
+      '((sequence "TODO(t)" "NEXT(n)" "PROG(p)" "WAIT(w)" "HOLD(h)"
+                  "|" "DONE(d)" "DELEGATED(l)" "KILL(k)")))
+
+(setq org-log-into-drawer nil)
+(setq org-log-done 'time)
+#+end_src
+
+** Refile
+=C-c C-w= moves a heading around inside whatever note you are in. There is no
+cross-file target list, because there is no longer a file that collects tasks.
+
+#+begin_src emacs-lisp
 (setq org-refile-use-outline-path 'file)
 (setq org-outline-path-complete-in-steps nil)
 (setq org-refile-allow-creating-parent-nodes 'confirm)
-
-;; Archive
-(setq org-archive-location "~/org/archive.org::* %s")
-
-(defun my/org-archive-done-tasks ()
-  "Archive all DONE tasks in the current buffer."
-  (interactive)
-  (org-map-entries
-   (lambda ()
-     (org-archive-subtree)
-     (setq org-map-continue-from (org-element-property :begin (org-element-at-point))))
-   "/DONE" 'file))
-
-;; agenda logs
-;; Disable automatic LOGBOOK entries - add deadlines/notes manually
-(setq org-log-into-drawer nil)
-(setq org-log-done 'time)
-(setq org-agenda-start-with-log-mode t)
-
-(setq org-agenda-log-mode-items '(closed note))
-(setq org-agenda-show-log t)
-(setq org-agenda-include-diary t)
-
 #+end_src
 
-* ORG JOURNAL
-Daily journal with each day in its own file.
+* CALENDAR AND DIARY
+Emacs' own diary predates Org by about two decades: plain text, one entry per
+line, with =%%(...)= sexp entries for real recurrence rules.  It is a purely
+dated layer and needs no agenda, which suits a setup where
+=org-agenda-files= is nil and tasks live in todo.txt.
+
+=calendar-date-style= must be set through =calendar-set-date-style=, not =setq=:
+the plain variable is only half the story, and the function also updates
+=diary-date-forms=, =calendar-date-display-form= and =calendar-month-header= to
+match.  With =iso= the diary reads =YYYY-MM-DD= or =YYYY/MM/DD=, and
+=diary-insert-entry= writes that form too.
+
+Vanilla calendar adds entries under an =i= prefix, but evil's normal state binds
+=i= to =evil-insert=, so that prefix is unreachable.  Re-hang it on =gi= to
+match the =g= prefix evil-collection uses for mode-specific commands.
 
 #+begin_src emacs-lisp
-(use-package org-journal
-  :ensure t
-  :defer t
-  :init
-  (setq org-journal-dir "~/org/journal/"
-        org-journal-date-format "[%Y-%m-%d %A]"
-        org-journal-file-format "%Y-%m-%d.org"
-        org-journal-file-type 'daily
-        org-journal-find-file 'find-file
-        org-journal-enable-agenda-integration t
-        org-journal-date-prefix "* "
-        org-journal-time-prefix "** "
-        org-journal-time-format "[%Y-%m-%d %a %H:%M] ")
-  :config
-  ;; Include journal files in agenda
-  (setq org-agenda-file-regexp "\\`[^.].*\\.org\\'")
-  (add-to-list 'org-agenda-files org-journal-dir))
+(setq diary-file (expand-file-name "diary" org-directory))
+
+(with-eval-after-load 'calendar
+  (calendar-set-date-style 'iso))
+
+(with-eval-after-load 'evil-collection-calendar
+  (evil-collection-define-key 'normal 'calendar-mode-map
+    "gid" #'diary-insert-entry
+    "giw" #'diary-insert-weekly-entry
+    "gim" #'diary-insert-monthly-entry
+    "giy" #'diary-insert-yearly-entry))
 #+end_src
 
 * MODELINE
@@ -655,6 +807,25 @@ Org-bullets gives us attractive bullets rather than asterisks.
 (add-hook 'org-mode-hook 'org-indent-mode)
 (use-package org-bullets)
 (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+#+end_src
+
+** Heading Weight
+Doom themes make every org heading bold, which in a file that is mostly headings
+means most of the buffer is bold. This drops the weight to normal while leaving
+the theme's colors and sizes alone. It reapplies on every theme switch, since
+loading a theme resets faces.
+
+#+begin_src emacs-lisp
+(defun my/org-headings-lighter (&rest _)
+  "Let org headings keep the theme's colors, but not its bold."
+  (dolist (face '(org-level-1 org-level-2 org-level-3 org-level-4
+                  org-level-5 org-level-6 org-level-7 org-level-8
+                  org-document-title))
+    (when (facep face)
+      (set-face-attribute face nil :weight 'normal))))
+
+(with-eval-after-load 'org-faces (my/org-headings-lighter))
+(add-hook 'enable-theme-functions #'my/org-headings-lighter)
 #+end_src
 
 ** Source Code Block Tag Expansion
@@ -860,19 +1031,39 @@ Vterm is a terminal emulator within Emacs.  The 'shell-file-name' setting sets t
 #+end_src
 
 * THEME
-The first of the two lines below designates the directory where will place all of our themes.  The second line loads our chosen theme which is *dtmacs*, a theme that I created with the help of the [[https://emacsfodder.github.io/emacs-theme-editor/][Emacs Theme Editor]].
+=themes/= holds single-file themes not worth a package: drop the =.el= in and it
+is available, since the first line below puts that directory on
+=custom-theme-load-path=.  =gruber-darker-theme.el= and =soft-charcoal-theme.el=
+live there.
+
+Elpaca never adds a build directory to =custom-theme-load-path= -- doom-themes
+adds itself, from inside its own source -- and =gruber-darker-theme.el= ends in
+=provide-theme= rather than =provide=, so =use-package gruber-darker-theme=
+would fail on the =require=.  Hence the plain file copy.
+
+Try any installed theme live with =SPC h t=.  =load-theme= stacks rather than
+replaces, so =M-x disable-theme= the old one first or faces bleed through.  To
+change the startup theme, edit the =load-theme= call below.  It sits inside
+=doom-themes='s =:config= because a doom theme is not on disk until elpaca has
+built that package; a =themes/= theme has no such constraint and could be loaded
+at top level.
 
 #+begin_src emacs-lisp
 (add-to-list 'custom-theme-load-path "~/.config/emacs/themes/")
+
 (use-package doom-themes
   :config
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  (load-theme 'doom-gruvbox t)
   ;; Enable custom neotree theme (all-the-icons must be installed!)
   (doom-themes-neotree-config)
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config))
+
+;; gruber-darker is a file in themes/, so it needs no package and can load
+;; right here.  To go back to a doom theme, move the call inside the :config
+;; above instead: a doom theme is not on disk until elpaca has built it.
+(load-theme 'gruber-darker t)
 #+end_src
 
 * TLDR
@@ -880,11 +1071,152 @@ The first of the two lines below designates the directory where will place all o
 (use-package tldr)
 #+end_src
 
+* TODO.TXT
+Open tasks live in =~/org/todo.txt= in todo.txt format: one self-contained line
+each, carrying its own =+project=, =@context= and =due:= date, so nothing
+depends on a parent heading. =todotxt.el= edits it here, =tuxedo= edits the same
+file in the terminal, and neither owns it. =A= archives completed lines to the
+sibling =~/org/done.txt=, which is the same file tuxedo archives to.
+
+=SPC a= opens it. Inside: =a= add, =e= edit, =c= toggle complete, =r= priority,
+=d= due date, =t= tag, =/= filter for, =\\= filter out, =l= clear filters,
+=i= hide done, =A= archive, =R= reload, =u= undo, =q= bury, =?= the full list.
+=SPC= stays the leader, so every other binding still works from in there.
+
+Filters are invisible by default -- hidden lines just aren't there, with nothing
+saying why. The header line names what is being filtered out and how many lines
+that costs you, so =l= never has to be a guess.
+
+#+begin_src emacs-lisp
+(defun my/todotxt-filter-label (f)
+  "Readable name for one predicate in `todotxt-active-filters'.
+The keyword filters are lambdas built at runtime, so the word has to be read
+back out of the lambda's own source."
+  (if (eq f 'todotxt-complete-p)
+      "done hidden"
+    (let* ((flat (format "%S" f))
+           (word (and (string-match "line-match \"\\([^\"]+\\)\"" flat)
+                      (match-string 1 flat))))
+      (cond ((null word) "a filter")
+            ((string-match-p "(not " flat) (concat "only " word))
+            (t (concat "without " word))))))
+
+(defun my/todotxt-header ()
+  "Header line for todo.txt: what is filtered, and what it is hiding."
+  (let* ((hidden (length (seq-filter
+                          (lambda (o) (eq (overlay-get o 'invisible) t))
+                          (overlays-in (point-min) (point-max)))))
+         (total (save-excursion
+                  (save-match-data
+                    (how-many "^[^[:space:]]" (point-min) (point-max)))))
+         (labels (delete-dups (mapcar #'my/todotxt-filter-label
+                                      todotxt-active-filters))))
+    (if (null labels)
+        (propertize (format " %d task%s" total (if (= total 1) "" "s"))
+                    'face 'shadow)
+      (concat
+       (propertize " FILTERED " 'face '(:inherit warning :weight bold))
+       (propertize (mapconcat #'identity labels " \u00b7 ") 'face 'warning)
+       (propertize (format "  %d of %d shown, press l to clear"
+                           (- total hidden) total)
+                   'face 'shadow)))))
+#+end_src
+
+=todotxt.el='s own =todotxt-archive= is broken: it appends each line to
+=done.txt= without a trailing newline, so the next one lands on the same line,
+and its loop body returns =t= unconditionally, so if a delete ever fails to
+advance point it appends the same line forever. That hangs Emacs and corrupts
+=done.txt=. This replaces it.
+
+#+begin_src emacs-lisp
+(defun my/todotxt-archive ()
+  "Move every completed line out of todo.txt and onto the end of done.txt.
+Collects the lines first and writes them in one go, each newline-terminated, so
+a missing final newline cannot concatenate records. The loop always advances."
+  (interactive)
+  (todotxt-remove-overlays)
+  (let ((done '())
+        (target (expand-file-name "done.txt" (file-name-directory todotxt-file))))
+    (save-excursion
+      (goto-char (point-min))
+      (let ((inhibit-read-only t))
+        (while (not (eobp))
+          (if (and (not (todotxt-line-empty-p)) (todotxt-complete-p))
+              (progn
+                (push (buffer-substring-no-properties
+                       (line-beginning-position) (line-end-position))
+                      done)
+                ;; deleting leaves point at the start of the next line already
+                (delete-region (line-beginning-position)
+                               (min (point-max) (1+ (line-end-position)))))
+            (forward-line 1)))))
+    (if (null done)
+        (message "Nothing completed to archive")
+      (setq done (nreverse done))
+      (with-temp-buffer
+        (insert (mapconcat #'identity done "\n") "\n")
+        (write-region (point-min) (point-max) target t 'silent))
+      (when todotxt-save-after-change (save-buffer))
+      (todotxt-apply-active-filters)
+      (message "Archived %d line%s to done.txt"
+               (length done) (if (= (length done) 1) "" "s")))))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package todotxt
+  :init
+  (setq todotxt-file (expand-file-name "todo.txt" org-directory))
+  :config
+  ;; The interface is single-letter keys, but putting the buffer in evil's emacs
+  ;; state to get them kills SPC as the leader inside it. Stay in normal state
+  ;; and bind them there instead: the buffer is read-only, so the evil keys
+  ;; being shadowed (i, a, d, t, l) had nothing to do here anyway. j/k/gg/G
+  ;; still come from evil.
+  (with-eval-after-load 'evil
+    (evil-define-key 'normal todotxt-mode-map
+      "a" #'todotxt-add-item
+      "e" #'todotxt-edit-item
+      "c" #'todotxt-complete-toggle
+      "r" #'todotxt-add-priority
+      "d" #'todotxt-add-due-date
+      "t" #'todotxt-tag-item
+      "/" #'todotxt-filter-for
+      "\\" #'todotxt-filter-out
+      "l" #'todotxt-unhide-all
+      "i" #'todotxt-show-incomplete
+      "A" #'my/todotxt-archive
+      "N" #'todotxt-nuke-item
+      "R" #'todotxt-revert
+      "u" #'todotxt-undo
+      "q" #'todotxt-bury
+      "?" #'describe-mode))
+  ;; :eval re-runs on redisplay, so no hook is needed when a filter changes
+  (add-hook 'todotxt-mode-hook
+            (lambda ()
+              (setq header-line-format '((:eval (my/todotxt-header)))))))
+#+end_src
+
 * TRANSPARENCY
 With Emacs version 29, true transparency has been added.  
 
+A standalone Emacs builds its *first* frame before init.el runs, so
+=default-frame-alist= alone never reaches it. Set all three: the default for
+later frames, the initial frame, and any frame that already exists by the time
+init finishes. The last hook covers daemon clients.
+
 #+begin_src emacs-lisp
-(add-to-list 'default-frame-alist '(alpha-background . 95)) ; For all new frames henceforth
+(defvar my/frame-alpha 90
+  "Background transparency for every frame, 0 (clear) to 100 (opaque).")
+
+(defun my/apply-alpha (&optional frame)
+  "Give FRAME the configured background alpha, or every frame if none is given."
+  (dolist (f (if (framep frame) (list frame) (frame-list)))
+    (set-frame-parameter f 'alpha-background my/frame-alpha)))
+
+(add-to-list 'default-frame-alist (cons 'alpha-background my/frame-alpha))
+(add-to-list 'initial-frame-alist (cons 'alpha-background my/frame-alpha))
+(add-hook 'after-init-hook #'my/apply-alpha)
+(add-hook 'server-after-make-frame-hook #'my/apply-alpha)
 #+end_src
 
 * WHICH-KEY
