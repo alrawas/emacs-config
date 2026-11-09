@@ -280,6 +280,10 @@
 
 ;;; Programming
 
+(use-package outline                    ; fold elisp files (like this one) by their headings
+  :custom (outline-minor-mode-cycle t)  ; TAB on a ";;;" or "(" line at column 0 folds it
+  :hook (emacs-lisp-mode . outline-minor-mode))
+
 (use-package company                    ; completion popup while typing; works in a terminal
   :hook (prog-mode . company-mode)
   :custom
