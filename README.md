@@ -3,6 +3,11 @@
 A plain `init.el`, built-ins first, evil kept. One config for Emacs 29 and
 30, in a window or in a terminal (`emacs -nw`), on the laptop and over SSH.
 
+**Getting started:** open [`docs/index.html`](docs/index.html) in a browser
+(`xdg-open ~/.config/emacs/docs/index.html`). It has the first ten minutes,
+every key in a list you can filter, what's installed, and how to change
+things.
+
 ## Layout
 
 | File | What it holds |
@@ -11,6 +16,7 @@ A plain `init.el`, built-ins first, evil kept. One config for Emacs 29 and
 | `init.el` | Everything else, top to bottom, one `use-package` block per package. TAB on a `;;;` line folds that section |
 | `lisp/` | My own commands: org notes (`my-org-notes.el`), todo.txt helpers (`my-todotxt.el`), `which-keymap.el` |
 | `themes/` | Single-file themes (gruber-darker is the one in use) |
+| `docs/index.html` | The getting-started guide and key catalogue |
 
 ## Install
 

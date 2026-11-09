@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ARAWAS Emacs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&family=Martian+Mono:wght@400;700&display=swap">
+<style>
+/* Standalone page: the resets the artifact viewer used to supply. */
+body { margin: 0; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+
+/* Layout: one reading column under a fixed bottom mode line (as in Emacs); the key catalogue widens into which-key-style columns. */
+:root {
+  --bg: #181818;
+  --bg-1: #212121;
+  --bg-2: #2b2829;
+  --line: #453d41;
+  --fg: #e4e4ef;
+  --muted: #95a99f;
+  --accent: #ffdd33;
+  --mark: #ffdd33;
+  --mark-ink: #181818;
+  --key: #96a6c8;
+  --str: #cc8c3c;
+  --ok: #73c936;
+  --violet: #9e95c7;
+  --display: "Martian Mono", "IosevkaTerm Nerd Font Mono", ui-monospace, monospace;
+  --body: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IosevkaTerm Nerd Font Mono", "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --step--1: 0.84rem;
+  --step-0: 1rem;
+  --step-1: 1.2rem;
+  --step-2: 1.5rem;
+  --step-3: clamp(1.8rem, 1.2rem + 2.4vw, 2.6rem);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #eef0f3; --bg-1: #ffffff; --bg-2: #e2e5ea; --line: #c6ccd5;
+    --fg: #1c1e23; --muted: #4c5f56; --accent: #8a6500; --mark: #ffd51f; --mark-ink: #181818;
+    --key: #33467c; --str: #8a5310; --ok: #2b7612; --violet: #574d93;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #eef0f3; --bg-1: #ffffff; --bg-2: #e2e5ea; --line: #c6ccd5;
+  --fg: #1c1e23; --muted: #4c5f56; --accent: #8a6500; --mark: #ffd51f; --mark-ink: #181818;
+  --key: #33467c; --str: #8a5310; --ok: #2b7612; --violet: #574d93;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-bottom: 4rem; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 var(--step-0)/1.6 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 5rem;
+}
+a { color: var(--key); text-underline-offset: 0.18em; }
+a:focus-visible, button:focus-visible, input:focus-visible, label:focus-within {
+  outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px;
+}
+code, kbd, .mono { font-family: var(--mono); font-size: 0.92em; }
+kbd {
+  color: var(--key);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.05em 0.4em;
+  white-space: nowrap;
+}
+code { color: var(--str); }
+
+.wrap { max-width: 72rem; margin: 0 auto; }
+.col { max-width: 44rem; }
+section { padding-block: 3rem 0; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; text-wrap: balance; line-height: 1.2; margin: 0; }
+h2 { font-size: var(--step-2); display: flex; gap: 0.6em; align-items: baseline; flex-wrap: wrap; }
+h2 .outline { color: var(--muted); font-weight: 400; font-size: var(--step--1); }
+h3 { font-size: var(--step-0); }
+p { margin: 0; }
+.stack { display: grid; gap: 1rem; }
+.lede { font-size: var(--step-1); max-width: 40rem; }
+.muted { color: var(--muted); }
+.label { font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+/* ---- hero ---- */
+.hero { padding-block: 2.5rem 0; display: grid; gap: 1.75rem; }
+.hero h1 { font-size: var(--step-3); }
+.hero h1 .dim { color: var(--muted); font-weight: 400; }
+.frame {
+  margin: 0;
+  border: 1px solid var(--line);
+  background: var(--bg-1);
+  border-radius: 6px;
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  max-width: 100%;
+}
+.frame .buf { overflow-x: auto; padding: 0.8rem 0; }
+.frame .ln { white-space: pre; display: flex; min-height: 1.5em; }
+.frame .num { color: var(--muted); opacity: 0.7; width: 3.2ch; text-align: right; padding-right: 1.4ch; flex: none; }
+.frame .c { color: var(--muted); }
+.cursor { background: var(--mark); color: var(--mark-ink); animation: blink 1.1s steps(1) infinite; }
+@keyframes blink { 50% { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .cursor { animation: none; } }
+.frame .ml { background: var(--bg-2); border-top: 1px solid var(--line); padding: 0.25rem 0.8rem; white-space: pre; overflow-x: auto; }
+.frame .ml b { color: var(--fg); }
+.frame .echo { padding: 0.35rem 0.8rem; color: var(--fg); overflow-x: auto; white-space: pre; }
+.facts { display: flex; flex-wrap: wrap; gap: 0.6rem 2.2rem; margin: 0; }
+.facts div { display: grid; }
+.facts dt { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); }
+.facts dd { margin: 0; font-family: var(--display); font-size: var(--step-1); font-variant-numeric: tabular-nums; }
+.facts dd small { font-family: var(--body); font-size: var(--step--1); color: var(--muted); font-weight: 400; }
+
+/* ---- checklist ---- */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; counter-reset: step; }
+.steps li { counter-increment: step; }
+.steps label {
+  display: grid; grid-template-columns: auto 2.2rem 1fr; gap: 0.6rem; align-items: start;
+  padding: 0.65rem 0.75rem; border-radius: 6px; cursor: pointer;
+}
+.steps label:hover { background: var(--bg-1); }
+.steps input { margin: 0.35rem 0 0; accent-color: var(--ok); width: 1.05rem; height: 1.05rem; }
+.steps label::before {
+  content: counter(step); grid-column: 2; grid-row: 1;
+  font-family: var(--display); color: var(--accent); font-size: var(--step-0);
+}
+.steps input { grid-column: 1; grid-row: 1; }
+.steps .txt { grid-column: 3; grid-row: 1; min-width: 0; }
+.steps input:checked ~ .txt { color: var(--muted); }
+.steps input:checked ~ .txt kbd { opacity: 0.6; }
+.progress { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); }
+
+/* ---- leader rule ---- */
+.mirror { width: 100%; border-collapse: collapse; }
+.mirror th, .mirror td { text-align: left; padding: 0.55rem 0.8rem 0.55rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.mirror th { font-family: var(--mono); font-weight: 400; font-size: var(--step--1); color: var(--muted); }
+.mirror td:first-child, .mirror td:nth-child(2) { white-space: nowrap; }
+.mirror .eq { color: var(--muted); }
+.table-scroll { overflow-x: auto; }
+.yours { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; }
+
+/* ---- key catalogue ---- */
+.minibuf {
+  display: flex; align-items: center; gap: 0.6rem;
+  background: var(--bg-1); border: 1px solid var(--line); border-radius: 6px;
+  padding: 0.55rem 0.8rem; font-family: var(--mono);
+}
+.minibuf label { color: var(--accent); white-space: nowrap; }
+.minibuf input {
+  flex: 1; min-width: 0; background: transparent; border: 0; color: var(--fg);
+  font: inherit; font-size: 1rem; padding: 0.15rem 0;
+}
+.minibuf input:focus { outline: none; }
+.minibuf:focus-within { border-color: var(--accent); }
+.count { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); white-space: nowrap; }
+.groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); gap: 1.75rem 2.25rem; align-items: start; }
+.group { min-width: 0; }
+.group header { display: flex; gap: 0.6rem; align-items: baseline; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 0.35rem; margin-bottom: 0.4rem; }
+.group h3 { color: var(--accent); }
+.group .same { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); }
+.group dl { margin: 0; display: grid; gap: 0.15rem; }
+.row { display: grid; grid-template-columns: minmax(6.5rem, max-content) 1fr; gap: 0.2rem 0.9rem; padding: 0.3rem 0; }
+.row dt { font-family: var(--mono); color: var(--key); white-space: nowrap; }
+.row dd { margin: 0; min-width: 0; }
+.row .cmd { display: block; font-family: var(--mono); font-size: 0.78rem; color: var(--muted); overflow-wrap: anywhere; }
+.empty { color: var(--muted); font-family: var(--mono); }
+
+/* ---- recipes / lists ---- */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); gap: 1rem; }
+.card { background: var(--bg-1); border: 1px solid var(--line); border-radius: 6px; padding: 1rem 1.1rem; display: grid; gap: 0.5rem; align-content: start; min-width: 0; }
+.card h3 { color: var(--accent); }
+.card p { color: var(--fg); }
+.pkg { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); gap: 0.2rem 2rem; }
+.pkg li { display: grid; grid-template-columns: 10.5rem 1fr; gap: 0.8rem; padding: 0.4rem 0; border-bottom: 1px solid var(--line); }
+.pkg li > span:first-child { font-family: var(--mono); color: var(--violet); overflow-wrap: anywhere; }
+@media (max-width: 30rem) { .pkg li { grid-template-columns: 1fr; gap: 0.1rem; } }
+.tree { font-family: var(--mono); font-size: 0.9rem; background: var(--bg-1); border: 1px solid var(--line); border-radius: 6px; padding: 0.9rem 1rem; overflow-x: auto; white-space: pre; line-height: 1.55; margin: 0; }
+.tree .c { color: var(--muted); }
+.tree .h { color: var(--accent); }
+.howto { display: grid; gap: 0.9rem; padding: 0; margin: 0; list-style: none; }
+.howto li { display: grid; grid-template-columns: minmax(9rem, 14rem) 1fr; gap: 0.3rem 1.2rem; padding-bottom: 0.9rem; border-bottom: 1px solid var(--line); }
+.howto li > strong { font-weight: 700; }
+@media (max-width: 34rem) { .howto li { grid-template-columns: 1fr; } }
+
+/* shell commands with copy */
+.cmdline { display: flex; gap: 0.5rem; align-items: stretch; margin: 0; }
+.cmdline pre { flex: 1; min-width: 0; margin: 0; overflow-x: auto; background: var(--bg-1); border: 1px solid var(--line); border-radius: 6px; padding: 0.6rem 0.8rem; font-family: var(--mono); font-size: 0.88rem; color: var(--fg); }
+.cmdline pre .c { color: var(--muted); }
+.copy { flex: none; font: inherit; font-family: var(--mono); font-size: var(--step--1); color: var(--fg); background: var(--bg-2); border: 1px solid var(--line); border-radius: 6px; padding: 0 0.8rem; cursor: pointer; }
+.copy:hover { border-color: var(--accent); }
+.server { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 1.1rem; }
+.server > li { display: grid; grid-template-columns: 2rem 1fr; gap: 0.6rem; counter-increment: s; }
+.server > li::before { content: counter(s); font-family: var(--display); color: var(--accent); }
+.server > li > div { display: grid; gap: 0.5rem; min-width: 0; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 1.5rem 2.5rem; }
+.two ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.45rem; }
+footer { padding-block: 3.5rem 1rem; color: var(--muted); font-size: var(--step--1); font-family: var(--mono); }
+
+/* ---- the mode line, fixed to the bottom like Emacs ---- */
+.modeline {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: var(--bg-2); border-top: 1px solid var(--line);
+  font-family: var(--mono); font-size: 0.85rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.modeline .ml-inner { max-width: 72rem; margin: 0 auto; display: flex; gap: 1.1rem; align-items: center; height: 2.3rem; overflow-x: auto; white-space: nowrap; }
+.modeline .flag { color: var(--muted); }
+.modeline .name { color: var(--fg); font-weight: 600; }
+.modeline .pos { color: var(--muted); min-width: 3ch; font-variant-numeric: tabular-nums; }
+.modeline .modes { color: var(--muted); }
+.modeline .modes a { color: var(--fg); text-decoration: none; padding: 0.15rem 0.2rem; border-radius: 3px; }
+.modeline .modes a:hover { color: var(--accent); }
+.modeline .modes a[aria-current="true"] { background: var(--mark); color: var(--mark-ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero" id="top">
+  <div class="stack">
+    <p class="label">~/.config/emacs</p>
+    <h1>ARAWAS Emacs <span class="dim">— welcome back.</span></h1>
+    <p class="lede">This is the config you now have: one <code>init.el</code> you can read top to bottom, a dozen downloaded packages, and the same files on the laptop and the server.</p>
+  </div>
+  <figure class="frame" aria-label="What Emacs shows right after it starts">
+    <div class="buf">
+      <div class="ln"><span class="num">1</span><span class="c">;; SPC ,    buffers, recent files, bookmarks     SPC p p  projects</span></div>
+      <div class="ln"><span class="num">2</span><span class="c">;; SPC r m  bookmark this spot                    SPC h    help (C-h)</span></div>
+      <div class="ln"><span class="num">3</span></div>
+      <div class="ln"><span class="num">4</span><span class="cursor"> </span></div>
+    </div>
+    <div class="ml">-UUU:---  <b>*scratch*</b>      All   L4    &lt;N&gt;   (Lisp Interaction company WK ElDoc)</div>
+    <div class="echo">For information about GNU Emacs and the GNU system, type SPC h C-a.</div>
+  </figure>
+  <dl class="facts">
+    <div><dt>startup</dt><dd>0.2–0.6 s <small>was 2–3 s</small></dd></div>
+    <div><dt>packages you list</dt><dd>12 <small>was ~40</small></dd></div>
+    <div><dt>code in init.el</dt><dd>293 lines <small>was 1,509 across config.org and scripts</small></dd></div>
+    <div><dt>runs on</dt><dd>Emacs 29 &amp; 30 <small>window or terminal</small></dd></div>
+  </dl>
+</header>
+
+<section id="start" class="col stack">
+  <h2>First ten minutes <span class="outline">;;; start</span></h2>
+  <p class="muted">Tick them off as you go. Your browser remembers the ticks; nothing else does.</p>
+  <ol class="steps" id="steps">
+    <li><label><input type="checkbox" id="step-restart"><span class="txt">Quit the Emacs you have open and start it again. The open one is still running the old config.</span></label></li>
+    <li><label><input type="checkbox" id="step-spc"><span class="txt">Press <kbd>SPC</kbd> and wait half a second. which-key lists every leader group.</span></label></li>
+    <li><label><input type="checkbox" id="step-comma"><span class="txt">Press <kbd>SPC ,</kbd> and pick something. Open buffers, recent files and bookmarks share one list.</span></label></li>
+    <li><label><input type="checkbox" id="step-project"><span class="txt">Press <kbd>SPC p p</kbd>. Your projectile projects came along. Pick one, then <kbd>f</kbd> for a file or <kbd>m</kbd> for magit.</span></label></li>
+    <li><label><input type="checkbox" id="step-bookmark"><span class="txt">On any line, press <kbd>SPC r m</kbd> and give it a name. Tomorrow, <kbd>SPC r b</kbd> brings you straight back.</span></label></li>
+    <li><label><input type="checkbox" id="step-go"><span class="txt">Open a <code>.go</code> file. gopls starts by itself. Try <kbd>gd</kbd>, <kbd>K</kbd>, then save a badly formatted line and watch gofmt fix it.</span></label></li>
+    <li><label><input type="checkbox" id="step-help"><span class="txt">Press <kbd>SPC h k</kbd>, then any key. Emacs tells you which command that key runs.</span></label></li>
+    <li><label><input type="checkbox" id="step-fold"><span class="txt">Open <code>init.el</code> with <kbd>SPC f c</kbd> and press <kbd>zM</kbd>. The file folds into its 14 sections. <kbd>TAB</kbd> opens one, <kbd>zR</kbd> opens everything.</span></label></li>
+  </ol>
+  <p class="progress" id="progress" aria-live="polite">0 of 8 done</p>
+</section>
+
+<section id="leader" class="col stack">
+  <h2>The leader, in one rule <span class="outline">;;; leader</span></h2>
+  <p>A leader letter that matches an Emacs prefix <em>is</em> that prefix. Anything you read in the manual or online works with the leader too: swap <kbd>C-h</kbd> for <kbd>SPC h</kbd>, or <kbd>C-x p</kbd> for <kbd>SPC p</kbd>. In insert state, <kbd>M-SPC</kbd> is the leader.</p>
+  <div class="table-scroll">
+    <table class="mirror">
+      <thead><tr><th>leader</th><th>same as</th><th>holds</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>SPC h</kbd></td><td><span class="eq">=</span> <kbd>C-h</kbd></td><td>help: describe keys, functions, variables, modes</td></tr>
+        <tr><td><kbd>SPC p</kbd></td><td><span class="eq">=</span> <kbd>C-x p</kbd></td><td>projects: switch, find file, grep, compile, magit</td></tr>
+        <tr><td><kbd>SPC r</kbd></td><td><span class="eq">=</span> <kbd>C-x r</kbd></td><td>bookmarks and registers</td></tr>
+        <tr><td><kbd>SPC w</kbd></td><td><span class="eq">=</span> <kbd>C-w</kbd></td><td>windows, the vim way</td></tr>
+        <tr><td><kbd>SPC x</kbd></td><td><span class="eq">=</span> <kbd>C-x</kbd></td><td>everything else Emacs keeps under C-x</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>The other letters are your own groups:</p>
+  <p class="yours"><span><kbd>SPC b</kbd> buffers</span><span><kbd>SPC c</kbd> code</span><span><kbd>SPC d</kbd> dired</span><span><kbd>SPC e</kbd> eval</span><span><kbd>SPC f</kbd> files</span><span><kbd>SPC g</kbd> git</span><span><kbd>SPC m</kbd> org</span><span><kbd>SPC s</kbd> search</span><span><kbd>SPC t</kbd> toggles</span><span><kbd>SPC a</kbd> todo.txt</span></p>
+</section>
+
+<section id="keys" class="stack">
+  <div class="col stack">
+    <h2>Every key <span class="outline">;;; keys</span></h2>
+    <p>Filter the way your minibuffer does: type words in any order. <span class="muted">Try <code>project file</code>, <code>bookmark</code> or <code>go</code>.</span></p>
+  </div>
+  <div class="minibuf">
+    <label for="key-filter">M-x keys:</label>
+    <input id="key-filter" type="search" autocomplete="off" spellcheck="false" placeholder="words in any order">
+    <span class="count" id="key-count" aria-live="polite"></span>
+  </div>
+  <div class="groups" id="groups"></div>
+  <p class="empty" id="key-empty" hidden>No key matches all of those words. Drop one and try again.</p>
+</section>
+
+<section id="recipes" class="stack">
+  <div class="col"><h2>Everyday recipes <span class="outline">;;; recipes</span></h2></div>
+  <div class="cards">
+    <article class="card">
+      <h3>Get back to something</h3>
+      <p><kbd>SPC ,</kbd> and type part of a name. Start with <kbd>b SPC</kbd>, <kbd>f SPC</kbd> or <kbd>m SPC</kbd> to see only buffers, recent files or bookmarks. <kbd>C-^</kbd> flips between your last two buffers.</p>
+    </article>
+    <article class="card">
+      <h3>Work in a project</h3>
+      <p><kbd>SPC p p</kbd> picks the repo. Then <kbd>SPC p f</kbd> finds files, <kbd>SPC s r</kbd> searches everything with ripgrep, <kbd>SPC p c</kbd> runs <code>go test ./...</code> with clickable errors, and <kbd>SPC p m</kbd> opens magit.</p>
+    </article>
+    <article class="card">
+      <h3>Write Go</h3>
+      <p>Completion pops up after two letters (<kbd>C-n</kbd>/<kbd>C-p</kbd>, <kbd>RET</kbd>). <kbd>gd</kbd> jumps to a definition and <kbd>C-o</kbd> comes back. <kbd>K</kbd> shows docs. <kbd>SPC c a</kbd> organizes imports, <kbd>SPC c r</kbd> renames, <kbd>SPC c d</kbd> lists errors. Saving runs gofmt.</p>
+    </article>
+    <article class="card">
+      <h3>Write Java</h3>
+      <p>Same keys as Go once jdtls is installed. You already set Java 21 as the default, which is what jdtls needs to run. Installing jdtls is the one step left; see <a href="#server">the commands below</a>.</p>
+    </article>
+    <article class="card">
+      <h3>Notes and writing</h3>
+      <p><kbd>SPC m c</kbd> then <kbd>s</kbd> spark, <kbd>i</kbd> learned, <kbd>p</kbd> place or <kbd>q</kbd> queue. Each one is a single line at the top of <code>life.org</code>. <kbd>SPC m l</kbd> opens it, <kbd>SPC m w</kbd> opens today's entry in <code>writing/2026.org</code>.</p>
+    </article>
+    <article class="card">
+      <h3>Tasks and git</h3>
+      <p><kbd>SPC a</kbd> opens <code>todo.txt</code>, the same file tuxedo edits. <kbd>SPC g g</kbd> shows the repo's status: <kbd>s</kbd> stages, <kbd>c</kbd> commits, <kbd>P</kbd> pushes, and each opens a small menu that shows the next key.</p>
+    </article>
+  </div>
+</section>
+
+<section id="installed" class="stack">
+  <div class="col stack">
+    <h2>What's installed <span class="outline">;;; packages</span></h2>
+    <p>Everything downloaded is one list near the top of <code>init.el</code>. Everything else ships with Emacs.</p>
+  </div>
+  <h3 class="label">downloaded · 12</h3>
+  <ul class="pkg">
+    <li><span>evil</span><span>Vim editing: modes, motions, operators, <kbd>:w</kbd>.</span></li>
+    <li><span>evil-collection</span><span>Vim keys inside dired, magit, help, calendar and more.</span></li>
+    <li><span>vertico</span><span>Shows completion candidates in a vertical list.</span></li>
+    <li><span>orderless</span><span>Lets you match space-separated words in any order.</span></li>
+    <li><span>marginalia</span><span>Adds a description next to each candidate.</span></li>
+    <li><span>consult</span><span>Search and jump with live preview: <kbd>SPC ,</kbd> and <kbd>SPC s</kbd>.</span></li>
+    <li><span>company</span><span>The completion popup in code. Works in a terminal.</span></li>
+    <li><span>magit</span><span>Git, all of it, under <kbd>SPC g</kbd>.</span></li>
+    <li><span>go-mode</span><span>Go editing and gofmt on save.</span></li>
+    <li><span>hl-todo</span><span>Highlights TODO, FIXME, HACK and NOTE in code.</span></li>
+    <li><span>todotxt</span><span>todo.txt inside Emacs, under <kbd>SPC a</kbd>.</span></li>
+    <li><span>which-key</span><span>Shows the next keys after a prefix. Built into Emacs 30, downloaded on 29.</span></li>
+  </ul>
+  <h3 class="label">built in, switched on and set up</h3>
+  <ul class="pkg">
+    <li><span>project.el</span><span>Every git repo is a project, under <kbd>SPC p</kbd>.</span></li>
+    <li><span>eglot</span><span>Talks to gopls and jdtls: completion, definitions, docs, renames.</span></li>
+    <li><span>flymake</span><span>Shows errors as you type, fed by Eglot.</span></li>
+    <li><span>dired</span><span>Files and folders, with <kbd>h</kbd>/<kbd>l</kbd> to move up and in.</span></li>
+    <li><span>recentf · savehist</span><span>Remember recent files and what you typed in the minibuffer.</span></li>
+    <li><span>saveplace · autorevert</span><span>Reopen files where you left off, and reload files changed outside Emacs.</span></li>
+    <li><span>org · org-tempo</span><span>Notes, capture templates, <kbd>&lt;s TAB</kbd> blocks.</span></li>
+    <li><span>calendar · diary</span><span>Dated plain-text entries in <code>~/org/diary</code>.</span></li>
+    <li><span>outline</span><span>Folds <code>init.el</code> by its headings.</span></li>
+    <li><span>xt-mouse · OSC 52</span><span>Mouse in a terminal, and copying that reaches your local clipboard over SSH.</span></li>
+    <li><span>electric-pair</span><span>Typing <code>(</code> inserts <code>()</code>.</span></li>
+    <li><span>tramp · eshell</span><span>Open <code>/sudo::</code> and <code>/ssh:host:</code> paths, and a shell written in Lisp.</span></li>
+  </ul>
+</section>
+
+<section id="files" class="stack">
+  <div class="col stack">
+    <h2>Where things live <span class="outline">;;; files</span></h2>
+    <p>Settings go in <code>init.el</code>. Commands you wrote yourself go in <code>lisp/</code>. What Emacs downloads or remembers stays out of git.</p>
+  </div>
+  <div class="two">
+<pre class="tree"><span class="h">~/.config/emacs/</span>
+├── early-init.el   <span class="c">GC, font, transparency, evil prerequisites</span>
+├── init.el         <span class="c">everything else, top to bottom</span>
+├── lisp/
+│   ├── my-org-notes.el   <span class="c">life.org, writing/, frontmatter</span>
+│   ├── my-todotxt.el     <span class="c">header line, fixed archive</span>
+│   └── which-keymap.el   <span class="c">SPC h K</span>
+├── themes/         <span class="c">gruber-darker, soft-charcoal</span>
+├── README.md
+└── <span class="c">elpa/ recentf history projects ...  (not in git)</span></pre>
+<pre class="tree"><span class="c">;; init.el after zM</span>
+<span class="h">;;; Packages</span>...           <span class="c">the download list</span>
+<span class="h">;;; Where things are</span>...   <span class="c">PATH for go/java, lisp/</span>
+<span class="h">;;; Emacs itself</span>...       <span class="c">scratch, backups, numbers</span>
+<span class="h">;;; Evil</span>...
+<span class="h">;;; Leader key</span>...         <span class="c">every SPC binding</span>
+<span class="h">;;; Completion</span>...
+<span class="h">;;; Help</span>...
+<span class="h">;;; Files and projects</span>...
+<span class="h">;;; Git</span>...
+<span class="h">;;; Programming</span>...        <span class="c">eglot, go, folding</span>
+<span class="h">;;; Terminal</span>...           <span class="c">mouse, clipboard</span>
+<span class="h">;;; Org and notes</span>...
+<span class="h">;;; todo.txt</span>...
+<span class="h">;;; Look</span>...               <span class="c">theme, italics</span></pre>
+  </div>
+</section>
+
+<section id="changing" class="col stack">
+  <h2>Changing things <span class="outline">;;; changing</span></h2>
+  <ul class="howto">
+    <li><strong>Add a package</strong><span>Add its name to the list under <code>;;; Packages</code> and restart. Then give it a <code>use-package</code> block for its settings.</span></li>
+    <li><strong>Remove a package</strong><span>Delete the name and its block, then run <kbd>M-x package-autoremove</kbd>.</span></li>
+    <li><strong>Update everything</strong><span><kbd>M-x package-upgrade-all</kbd>. Run it on both machines so they stay alike.</span></li>
+    <li><strong>Change a setting</strong><span>Edit the <code>:custom</code> line in its block, put the cursor inside the block and press <kbd>SPC e d</kbd>. Restart when in doubt.</span></li>
+    <li><strong>Add a leader key</strong><span>Add a line to <code>my/leader-map</code> under <code>;;; Leader key</code> and restart Emacs. It starts in under a second.</span></li>
+    <li><strong>Find out what a key does</strong><span><kbd>SPC h k</kbd> and the key. <kbd>SPC h K</kbd> shows every keymap that binds it, winner first.</span></li>
+    <li><strong>Try another theme</strong><span><kbd>M-x consult-theme</kbd> previews each one as you move. Keep one by changing the <code>load-theme</code> line.</span></li>
+    <li><strong>Save your changes</strong><span><kbd>SPC p p</kbd>, pick the Emacs config, <kbd>m</kbd> for magit, stage, commit, push. Then <code>git pull</code> on the server.</span></li>
+  </ul>
+</section>
+
+<section id="server" class="col stack">
+  <h2>On the server, and Java <span class="outline">;;; remote</span></h2>
+  <p>The server runs Emacs 29.3. The same files work there; this exact setup was tested in an Ubuntu 24.04 container.</p>
+  <ol class="server">
+    <li><div>
+      <p>Get the config. The first start downloads the packages, which takes about a minute.</p>
+      <div class="cmdline"><pre id="c1">git clone git@github.com:alrawas/emacs-config.git ~/.config/emacs
+emacs -nw</pre><button class="copy" type="button" data-copy="c1">Copy</button></div>
+    </div></li>
+    <li><div>
+      <p>Let copying in Emacs reach your laptop's clipboard through tmux. Add this to <code>~/.tmux.conf</code> on the server. The second line gives tmux full colors from alacritty.</p>
+      <div class="cmdline"><pre id="c2">set -g set-clipboard on
+set -as terminal-features ',alacritty:RGB'</pre><button class="copy" type="button" data-copy="c2">Copy</button></div>
+    </div></li>
+    <li><div>
+      <p>Only if <code>emacs -nw</code> says the terminal type <code>alacritty</code> is not defined: run this once from the laptop.</p>
+      <div class="cmdline"><pre id="c3">infocmp -x alacritty | ssh HOST -- tic -x -</pre><button class="copy" type="button" data-copy="c3">Copy</button></div>
+    </div></li>
+    <li><div>
+      <p>Install the language server and ripgrep on the server too. <code>go install</code> doesn't care which folder you run it from: with <code>@latest</code> it builds the named version and puts it in <code>~/go/bin</code>.</p>
+      <div class="cmdline"><pre id="c4">go install golang.org/x/tools/gopls@latest
+sudo apt install ripgrep</pre><button class="copy" type="button" data-copy="c4">Copy</button></div>
+    </div></li>
+    <li><div>
+      <p>Java, on any machine: download jdtls and put its launcher on your PATH. Then add Maven or Gradle if your projects use them.</p>
+      <div class="cmdline"><pre id="c5">mkdir -p ~/.local/share/jdtls
+curl -L https://download.eclipse.org/jdtls/snapshots/jdt-language-server-latest.tar.gz | tar -xz -C ~/.local/share/jdtls
+ln -s ~/.local/share/jdtls/bin/jdtls ~/.local/bin/jdtls
+sdk install maven</pre><button class="copy" type="button" data-copy="c5">Copy</button></div>
+    </div></li>
+  </ol>
+  <p class="muted">Two terminal habits: hold <kbd>Shift</kbd> while dragging to use the terminal's own selection, and start Emacs with <code>emacsclient -t -a ''</code> to keep one Emacs alive between SSH sessions.</p>
+</section>
+
+<section id="changed" class="stack">
+  <div class="col"><h2>What changed from the old config <span class="outline">;;; changes</span></h2></div>
+  <div class="two">
+    <div class="stack">
+      <h3 class="label">keys</h3>
+      <ul>
+        <li>Bookmarks moved from <kbd>SPC b</kbd> to <kbd>SPC r</kbd> (<kbd>m</kbd> set, <kbd>b</kbd> jump, <kbd>l</kbd> list).</li>
+        <li><kbd>SPC h t</kbd> is now the Emacs tutorial. Switch themes with <kbd>M-x consult-theme</kbd>.</li>
+        <li><kbd>SPC h r r</kbd> is gone. Restart Emacs instead; it starts in under a second. For one block, <kbd>SPC e d</kbd> inside it.</li>
+        <li><kbd>SPC f u</kbd> is gone. Type a <code>/sudo::/etc/...</code> path, or press <kbd>SPC f U</kbd> on an open file.</li>
+        <li>Gone with their packages: <kbd>SPC o</kbd>, <kbd>SPC =</kbd>, the neotree, vterm and peep keys, and <kbd>SPC m B</kbd>.</li>
+        <li>New: <kbd>SPC ,</kbd>, <kbd>SPC c</kbd>, <kbd>SPC s s/i/r</kbd>, <kbd>SPC x</kbd>, <kbd>SPC p m</kbd>.</li>
+      </ul>
+    </div>
+    <div class="stack">
+      <h3 class="label">behaviour</h3>
+      <ul>
+        <li>Line numbers show only in code and text. Long lines wrap only in prose.</li>
+        <li>The completion popup appears only in code, so writing in org stays quiet.</li>
+        <li><kbd>RET</kbd> indents new lines again.</li>
+        <li>Backups go to <code>~/.config/emacs/backups/</code> instead of <code>~/.Trash</code>.</li>
+        <li>Startup opens <code>*scratch*</code>. There is no dashboard.</li>
+        <li>Org no longer adds <code>org-capture-last-stored</code> bookmarks.</li>
+        <li>The old literate <code>config.org</code> is in git history, in the commit “Snapshot the literate config before the rewrite”.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Built for alrawas/emacs-config · Emacs 30.2 on the laptop, 29.3 on the server.
+</footer>
+</div>
+
+<nav class="modeline" aria-label="Sections">
+  <div class="ml-inner">
+    <span class="flag">-UUU:---</span>
+    <span class="name">ARAWAS Emacs</span>
+    <span class="pos" id="ml-pos">Top</span>
+    <span class="modes">(
+      <a href="#start">Start</a>
+      <a href="#leader">Leader</a>
+      <a href="#keys">Keys</a>
+      <a href="#recipes">Recipes</a>
+      <a href="#installed">Installed</a>
+      <a href="#files">Files</a>
+      <a href="#changing">Changing</a>
+      <a href="#server">Server</a>
+      <a href="#changed">Changed</a>
+    )</span>
+  </div>
+</nav>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---- key catalogue: [key, what it does, command] ----
+  var GROUPS = [
+    { title: "Start here", same: "", keys: [
+      ["SPC SPC", "Run any command by name", "execute-extended-command"],
+      ["SPC .", "Open a file", "find-file"],
+      ["SPC ,", "Jump to a buffer, recent file or bookmark", "consult-buffer"],
+      ["SPC a", "Open todo.txt", "todotxt"],
+      ["SPC TAB TAB", "Comment or uncomment the line", "comment-line"],
+      ["M-SPC", "The leader, from insert state or the minibuffer", ""]
+    ]},
+    { title: "Projects", same: "SPC p = C-x p", keys: [
+      ["SPC p p", "Switch project, then f g d v e m", "project-switch-project"],
+      ["SPC p f", "Find a file in this project", "project-find-file"],
+      ["SPC p b", "One of this project's buffers", "consult-project-buffer"],
+      ["SPC p g", "Search the project for a regexp", "project-find-regexp"],
+      ["SPC p r", "Search and replace across the project", "project-query-replace-regexp"],
+      ["SPC p c", "Compile or test: go test ./..., mvn test", "project-compile"],
+      ["SPC p m", "Magit for this project", "magit-project-status"],
+      ["SPC p e", "Eshell at the project root", "project-eshell"],
+      ["SPC p s", "Shell at the project root", "project-shell"],
+      ["SPC p d", "Pick a folder in the project", "project-find-dir"],
+      ["SPC p D", "Dired at the project root", "project-dired"],
+      ["SPC p !", "Run a shell command at the root", "project-shell-command"],
+      ["SPC p k", "Close this project's buffers", "project-kill-buffers"]
+    ]},
+    { title: "Bookmarks and registers", same: "SPC r = C-x r", keys: [
+      ["SPC r m", "Bookmark this spot, kept across restarts", "bookmark-set"],
+      ["SPC r b", "Jump to a bookmark", "consult-bookmark"],
+      ["SPC r l", "List bookmarks to rename or delete", "bookmark-bmenu-list"],
+      ["SPC r SPC", "Remember this spot in a register, this session only", "point-to-register"],
+      ["SPC r j", "Jump to a register", "jump-to-register"],
+      ["SPC r s", "Copy the selection into a register", "copy-to-register"],
+      ["SPC r i", "Insert a register's text", "insert-register"],
+      ["SPC r w", "Save the window layout in a register", "window-configuration-to-register"]
+    ]},
+    { title: "Inside SPC ,", same: "type the letter, then a space", keys: [
+      ["b SPC", "Only open buffers", ""],
+      ["f SPC", "Only recent files", ""],
+      ["m SPC", "Only bookmarks", ""],
+      ["p SPC", "Only this project", ""],
+      ["* SPC", "Only unsaved buffers", ""]
+    ]},
+    { title: "Buffers", same: "SPC b", keys: [
+      ["SPC b b", "Switch buffer, with preview", "consult-buffer"],
+      ["SPC b i", "List all buffers", "ibuffer"],
+      ["SPC b k", "Close this buffer", "kill-current-buffer"],
+      ["SPC b n", "Next buffer", "next-buffer"],
+      ["SPC b p", "Previous buffer", "previous-buffer"],
+      ["SPC b r", "Reload from disk", "revert-buffer"],
+      ["SPC b s", "Save", "save-buffer"],
+      ["SPC b x", "The scratch buffer", "scratch-buffer"],
+      ["C-^", "Flip to the buffer you were just in", "evil-buffer"]
+    ]},
+    { title: "Files", same: "SPC f", keys: [
+      ["SPC f r", "Recent files", "consult-recent-file"],
+      ["SPC f c", "Open init.el", "my/find-init-file"],
+      ["SPC f U", "Reopen this file as root", "my/sudo-this-file"]
+    ]},
+    { title: "Help", same: "SPC h = C-h", keys: [
+      ["SPC h k", "What does this key do?", "describe-key"],
+      ["SPC h K", "Every keymap that binds this key", "my/which-keymap"],
+      ["SPC h f", "Describe a function", "describe-function"],
+      ["SPC h v", "Describe a variable", "describe-variable"],
+      ["SPC h o", "Describe anything by name", "describe-symbol"],
+      ["SPC h x", "Describe a command", "describe-command"],
+      ["SPC h m", "The current modes and their keys", "describe-mode"],
+      ["SPC h b", "Every key active here", "describe-bindings"],
+      ["SPC h a", "Find commands by keyword", "apropos-command"],
+      ["SPC h i", "All the manuals", "info"],
+      ["SPC h r", "The Emacs manual", "info-emacs-manual"],
+      ["SPC h e", "Recent messages", "view-echo-area-messages"],
+      ["SPC h l", "Your last 300 keystrokes", "view-lossage"],
+      ["SPC h t", "The Emacs tutorial", "help-with-tutorial"]
+    ]},
+    { title: "Windows", same: "SPC w = C-w", keys: [
+      ["SPC w s", "Split below", "evil-window-split"],
+      ["SPC w v", "Split right", "evil-window-vsplit"],
+      ["SPC w h j k l", "Move to the window left, below, above, right", ""],
+      ["SPC w w", "Next window", "evil-window-next"],
+      ["SPC w c", "Close this window", "evil-window-delete"],
+      ["SPC w o", "Close every other window", "delete-other-windows"],
+      ["SPC w H J K L", "Move this window to the far side", ""],
+      ["SPC w =", "Make windows equal size", "balance-windows"]
+    ]},
+    { title: "Everything else", same: "SPC x = C-x", keys: [
+      ["SPC x b", "Switch buffer (the classic C-x b)", "consult-buffer"],
+      ["SPC x h", "Select the whole buffer", "mark-whole-buffer"],
+      ["SPC x 8 RET", "Insert a Unicode character by name", "insert-char"],
+      ["SPC x z", "Repeat the last command", "repeat"]
+    ]},
+    { title: "Code", same: "SPC c, plus vim keys", keys: [
+      ["gd", "Go to definition", "evil-goto-definition"],
+      ["K", "Show documentation", "eldoc-doc-buffer"],
+      ["C-o", "Jump back", "evil-jump-backward"],
+      ["SPC c a", "Code actions: fix, organize imports", "eglot-code-actions"],
+      ["SPC c r", "Rename a symbol everywhere", "eglot-rename"],
+      ["SPC c f", "Format the buffer", "eglot-format-buffer"],
+      ["SPC c d", "List this file's errors", "flymake-show-buffer-diagnostics"],
+      ["SPC c e", "Start the language server by hand", "eglot"],
+      ["C-n C-p", "Move in the completion popup; RET accepts", "company"]
+    ]},
+    { title: "Search", same: "SPC s", keys: [
+      ["SPC s s", "Search lines in this buffer", "consult-line"],
+      ["SPC s i", "Jump to a function or heading", "consult-imenu"],
+      ["SPC s r", "Search the whole project with ripgrep", "consult-ripgrep"],
+      ["SPC s d", "Look a word up in the dictionary", "dictionary-search"],
+      ["SPC s m", "Read a man page", "man"],
+      ["/", "Search forward in the buffer", "evil-ex-search-forward"]
+    ]},
+    { title: "Git", same: "SPC g", keys: [
+      ["SPC g g", "Status: stage, commit, push from here", "magit-status"],
+      ["SPC g SPC", "Every git command", "magit-dispatch"],
+      ["SPC g f", "This file: blame, log, diff", "magit-file-dispatch"],
+      ["SPC g b", "Blame", "magit-blame-addition"],
+      ["SPC g l", "Log of this branch", "magit-log-current"],
+      ["SPC g L", "Log of this file", "magit-log-buffer-file"],
+      ["SPC g d", "Diff of this file", "magit-diff-buffer-file"],
+      ["SPC g c", "Clone a repository", "magit-clone"],
+      ["SPC g i", "Make a folder a repository", "magit-init"],
+      ["?", "Inside magit: every key", ""]
+    ]},
+    { title: "Org and notes", same: "SPC m", keys: [
+      ["SPC m c", "Capture: s spark, i learned, p place, q queue", "org-capture"],
+      ["SPC m l", "Open life.org", "my/org-open-life"],
+      ["SPC m w", "Write today's entry", "my/org-write-today"],
+      ["SPC m t", "Cycle the TODO state", "org-todo"],
+      ["SPC m i", "Turn a line into a list item", "org-toggle-item"],
+      ["SPC m e", "Export", "org-export-dispatch"],
+      ["SPC m b -", "Add a table rule", "org-table-insert-hline"],
+      ["SPC m d t", "Insert a date", "org-time-stamp"],
+      ["TAB", "Fold or unfold a heading", "org-cycle"],
+      ["RET", "Follow a link", "my/org-return-follow-link"],
+      ["<s TAB", "Source block; <q quote, <e example", "org-tempo"]
+    ]},
+    { title: "todo.txt", same: "SPC a, then", keys: [
+      ["a", "Add a task", "todotxt-add-item"],
+      ["e", "Edit", "todotxt-edit-item"],
+      ["c", "Toggle done", "todotxt-complete-toggle"],
+      ["r", "Set priority", "todotxt-add-priority"],
+      ["d", "Set due date", "todotxt-add-due-date"],
+      ["t", "Tag", "todotxt-tag-item"],
+      ["/", "Show only lines matching", "todotxt-filter-for"],
+      ["\\", "Hide lines matching", "todotxt-filter-out"],
+      ["l", "Clear filters", "todotxt-unhide-all"],
+      ["i", "Hide done tasks", "todotxt-show-incomplete"],
+      ["A", "Archive done tasks to done.txt", "my/todotxt-archive"],
+      ["N", "Delete a task", "todotxt-nuke-item"],
+      ["R", "Reload", "todotxt-revert"],
+      ["u", "Undo", "todotxt-undo"],
+      ["q", "Close", "todotxt-bury"]
+    ]},
+    { title: "Dired", same: "SPC d", keys: [
+      ["SPC d j", "Open the folder of this file", "dired-jump"],
+      ["SPC d d", "Open any folder", "dired"],
+      ["h", "Up a folder", "dired-up-directory"],
+      ["l", "Open", "dired-find-file"],
+      ["E", "Open with the system app (Emacs 30)", "dired-do-open"],
+      ["C-x C-q", "Rename files by editing the list; C-c C-c applies", "dired-toggle-read-only"]
+    ]},
+    { title: "Eval and shell", same: "SPC e", keys: [
+      ["SPC e b", "Evaluate the whole buffer", "eval-buffer"],
+      ["SPC e d", "Evaluate the block around the cursor", "eval-defun"],
+      ["SPC e e", "Evaluate an expression", "eval-expression"],
+      ["SPC e l", "Evaluate the expression before the cursor", "eval-last-sexp"],
+      ["SPC e r", "Evaluate the selection", "eval-region"],
+      ["SPC e s", "Eshell", "eshell"]
+    ]},
+    { title: "Folding and undo", same: "vim keys", keys: [
+      ["TAB", "Fold a heading in init.el or org", "outline-cycle"],
+      ["zM", "Fold everything: init.el becomes a table of contents", ""],
+      ["zR", "Open everything", ""],
+      ["u", "Undo", "evil-undo"],
+      ["C-r", "Redo", "evil-redo"]
+    ]},
+    { title: "Toggles", same: "SPC t", keys: [
+      ["SPC t l", "Line numbers", "display-line-numbers-mode"],
+      ["SPC t t", "Wrap long lines", "visual-line-mode"]
+    ]},
+    { title: "Calendar and diary", same: "M-x calendar, then", keys: [
+      ["gid", "Add a diary entry for that day", "diary-insert-entry"],
+      ["giw", "Add a weekly entry", "diary-insert-weekly-entry"],
+      ["gim", "Add a monthly entry", "diary-insert-monthly-entry"],
+      ["giy", "Add a yearly entry", "diary-insert-yearly-entry"]
+    ]}
+  ];
+
+  var groupsEl = document.getElementById("groups");
+  var countEl = document.getElementById("key-count");
+  var emptyEl = document.getElementById("key-empty");
+  var filterEl = document.getElementById("key-filter");
+  var rows = [];
+  var total = 0;
+
+  GROUPS.forEach(function (g) {
+    var sec = document.createElement("section");
+    sec.className = "group";
+    var head = document.createElement("header");
+    var h = document.createElement("h3");
+    h.textContent = g.title;
+    head.appendChild(h);
+    if (g.same) {
+      var s = document.createElement("span");
+      s.className = "same";
+      s.textContent = g.same;
+      head.appendChild(s);
+    }
+    sec.appendChild(head);
+    var dl = document.createElement("dl");
+    g.keys.forEach(function (k) {
+      var row = document.createElement("div");
+      row.className = "row";
+      var dt = document.createElement("dt");
+      dt.textContent = k[0];
+      var dd = document.createElement("dd");
+      dd.textContent = k[1];
+      if (k[2]) {
+        var c = document.createElement("span");
+        c.className = "cmd";
+        c.textContent = k[2];
+        dd.appendChild(c);
+      }
+      row.appendChild(dt);
+      row.appendChild(dd);
+      dl.appendChild(row);
+      rows.push({ el: row, group: sec, text: (k[0] + " " + k[1] + " " + k[2] + " " + g.title + " " + g.same).toLowerCase() });
+      total++;
+    });
+    sec.appendChild(dl);
+    groupsEl.appendChild(sec);
+  });
+
+  function applyFilter() {
+    var words = filterEl.value.toLowerCase().split(/\s+/).filter(Boolean);
+    var shown = 0;
+    var visibleGroups = new Set();
+    rows.forEach(function (r) {
+      var ok = words.every(function (w) { return r.text.indexOf(w) !== -1; });
+      r.el.hidden = !ok;
+      if (ok) { shown++; visibleGroups.add(r.group); }
+    });
+    Array.prototype.forEach.call(groupsEl.children, function (sec) {
+      sec.hidden = !visibleGroups.has(sec);
+    });
+    countEl.textContent = words.length ? shown + " of " + total : total + " keys";
+    emptyEl.hidden = shown !== 0;
+  }
+  filterEl.addEventListener("input", applyFilter);
+  applyFilter();
+
+  // ---- checklist, remembered in this browser only ----
+  var STORE = "arawas-emacs-steps";
+  var boxes = Array.prototype.slice.call(document.querySelectorAll("#steps input[type=checkbox]"));
+  var progressEl = document.getElementById("progress");
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(STORE) || "{}") || {}; } catch (e) { saved = {}; }
+  function updateProgress() {
+    var done = boxes.filter(function (b) { return b.checked; }).length;
+    progressEl.textContent = done === boxes.length ? "All " + done + " done. Welcome back." : done + " of " + boxes.length + " done";
+  }
+  boxes.forEach(function (b) {
+    if (saved[b.id]) b.checked = true;
+    b.addEventListener("change", function () {
+      saved[b.id] = b.checked;
+      try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch (e) { /* storage unavailable: ticks last until reload */ }
+      updateProgress();
+    });
+  });
+  updateProgress();
+
+  // ---- copy buttons ----
+  Array.prototype.forEach.call(document.querySelectorAll("button[data-copy]"), function (btn) {
+    btn.addEventListener("click", function () {
+      var pre = document.getElementById(btn.getAttribute("data-copy"));
+      var text = pre.textContent;
+      function selectIt() {
+        var range = document.createRange();
+        range.selectNodeContents(pre);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        btn.textContent = "Selected";
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { btn.textContent = "Copied"; }, selectIt);
+      } else {
+        selectIt();
+      }
+      setTimeout(function () { btn.textContent = "Copy"; }, 1800);
+    });
+  });
+
+  // ---- the mode line: position and current section, like Emacs ----
+  var posEl = document.getElementById("ml-pos");
+  var links = Array.prototype.slice.call(document.querySelectorAll(".modeline .modes a"));
+  var sections = links.map(function (a) { return document.querySelector(a.getAttribute("href")); });
+  function onScroll() {
+    var doc = document.documentElement;
+    var max = doc.scrollHeight - window.innerHeight;
+    var y = window.scrollY;
+    posEl.textContent = y < 8 ? "Top" : (y >= max - 8 ? "Bot" : Math.round((y / max) * 100) + "%");
+    var current = -1;
+    sections.forEach(function (s, i) {
+      if (s && s.getBoundingClientRect().top < window.innerHeight * 0.4) current = i;
+    });
+    links.forEach(function (a, i) {
+      if (i === current) a.setAttribute("aria-current", "true");
+      else a.removeAttribute("aria-current");
+    });
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll);
+  onScroll();
+})();
+</script>
+</body>
+</html>
