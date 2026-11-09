@@ -101,9 +101,9 @@
    `(match ((t (:background ,gruber-darker-bg+4))))
    `(shadow ((t (:foreground ,gruber-darker-bg+4))))
    `(minibuffer-prompt ((t (:foreground ,gruber-darker-niagara))))
-   `(region ((t (:background ,gruber-darker-bg+3 :foreground nil))))
+   `(region ((t (:background ,gruber-darker-bg+3 :foreground unspecified))))
    `(secondary-selection ((t ,(list :background gruber-darker-bg+3
-                                    :foreground nil))))
+                                    :foreground 'unspecified))))
    `(trailing-whitespace ((t ,(list :foreground gruber-darker-black
                                     :background gruber-darker-red))))
    `(tooltip ((t ,(list :background gruber-darker-bg+4
@@ -131,9 +131,9 @@
 
    ;; Diff
    `(diff-removed ((t ,(list :foreground gruber-darker-red+1
-                             :background nil))))
+                             :background 'unspecified))))
    `(diff-added ((t ,(list :foreground gruber-darker-green
-                           :background nil))))
+                           :background 'unspecified))))
 
    ;; Dired
    `(dired-directory ((t (:foreground ,gruber-darker-niagara :weight bold))))
@@ -258,9 +258,9 @@
    `(jabber-activity-personal-face ((t (:foreground ,gruber-darker-yellow :bold t))))
 
    ;; Line Highlighting
-   `(highlight ((t (:background ,gruber-darker-bg+1 :foreground nil))))
+   `(highlight ((t (:background ,gruber-darker-bg+1 :foreground unspecified))))
    `(highlight-current-line-face ((t ,(list :background gruber-darker-bg+1
-                                            :foreground nil))))
+                                            :foreground 'unspecified))))
 
    ;; line numbers
    `(line-number ((t (:inherit default :foreground ,gruber-darker-bg+4))))
