@@ -389,13 +389,18 @@ code, kbd, pre, .mono, .row dt, .row .cmd, .frame { font-variant-ligatures: none
 <section id="tutorials" class="stack">
   <div class="col stack">
     <h2>Tutorials <span class="outline">;;; tutorials</span></h2>
-    <p>Five goals, each building on the one before. Every step uses a real key from your config. The Go, single-file Java and Lisp steps were run in this setup before being written down.</p>
+    <p>Ten goals, each building on the ones before. Every step uses a real key from your config. Unless a tutorial says otherwise, its steps were run in this setup before being written down.</p>
     <nav class="tut-index" aria-label="Tutorials">
       <a href="#tut-go"><span>1</span>Go: an empty folder to passing tests</a>
       <a href="#tut-java"><span>2</span>Java: one file, then a Maven project</a>
       <a href="#tut-nav"><span>3</span>Find your way around code you didn't write</a>
       <a href="#tut-lisp"><span>4</span>Teach Emacs a new trick in Lisp</a>
       <a href="#tut-scale"><span>5</span>Change a lot at once, then ship it</a>
+      <a href="#tut-magit"><span>6</span>Magit: branch, stash, merge, resolve a conflict</a>
+      <a href="#tut-eshell"><span>7</span>Eshell: a shell that speaks Lisp</a>
+      <a href="#tut-dired"><span>8</span>Dired: manage files in two panes</a>
+      <a href="#tut-org"><span>9</span>Org: notes that link, tables that align, code that runs</a>
+      <a href="#tut-pkg"><span>10</span>Grow the config: add a package, then remove it</a>
     </nav>
   </div>
 
@@ -407,7 +412,10 @@ code, kbd, pre, .mono, .row dt, .row .cmd, .frame { font-variant-ligatures: none
     </header>
     <ol class="tsteps">
       <li><div>
-        <p>In a terminal, make the module and open the first file:</p>
+        <p>First time only: tell git who you are. Without this, every commit in a new repo fails with <em>unable to auto-detect email address</em>.</p>
+        <div class="cmdline"><pre id="c17">git config --global user.name "Your Name"
+git config --global user.email you@example.com</pre><button class="copy" type="button" data-copy="c17">Copy</button></div>
+        <p>Then make the module and open the first file:</p>
         <div class="cmdline"><pre id="c6">mkdir -p ~/code/greet &amp;&amp; cd ~/code/greet
 go mod init example.com/greet
 emacs greet.go</pre><button class="copy" type="button" data-copy="c6">Copy</button></div>
@@ -453,7 +461,7 @@ func TestGreet(t *testing.T) {
 }</pre><button class="copy" type="button" data-copy="c9">Copy</button></div>
       </div></li>
       <li><div><p>Put the cursor on <code>Greet</code> and press <kbd>SPC c r</kbd>, then type <code>Hello</code>. gopls renames it in both files, never touching strings that merely contain the word. <kbd>gr</kbd> on it lists every use; <kbd>K</kbd> shows its doc comment.</p></div></li>
-      <li><div><p>Commit: <kbd>SPC g g</kbd>, put the cursor on <em>Untracked files</em> and press <kbd>s</kbd> to stage them all, then <kbd>c c</kbd>. Write the message and finish with <kbd>C-c C-c</kbd>.</p></div></li>
+      <li><div><p>Commit: <kbd>SPC g g</kbd>, put the cursor on <em>Untracked files</em> and press <kbd>s</kbd> to stage them all, then <kbd>c c</kbd>. The message buffer opens in normal state, so press <kbd>i</kbd>, write the message, and finish with <kbd>C-c C-c</kbd>.</p></div></li>
     </ol>
     <p class="learned"><strong>New keys:</strong> <kbd>SPC g i</kbd> <kbd>SPC p c</kbd> <kbd>M-g n</kbd> <kbd>M-g p</kbd> <kbd>gr</kbd> (rerun, in <code>*compilation*</code>) <kbd>SPC c r</kbd> <kbd>gr</kbd> (every use, in code) <kbd>K</kbd> <kbd>SPC g g</kbd></p>
   </article>
@@ -554,7 +562,7 @@ emacs src/main/java/com/example/App.java</pre><button class="copy" type="button"
   (kill-new buffer-file-name)
   (message "Copied %s" buffer-file-name))</pre><button class="copy" type="button" data-copy="c16">Copy</button></div>
       </div></li>
-      <li><div><p>Commit and share it: <kbd>SPC p p</kbd>, pick the Emacs config, <kbd>m</kbd>, stage with <kbd>s</kbd>, <kbd>c c</kbd>, message, <kbd>C-c C-c</kbd>, then <kbd>P u</kbd> to push. On the server, <code>git pull</code>.</p></div></li>
+      <li><div><p>Commit and share it: <kbd>SPC p p</kbd>, pick the Emacs config, <kbd>m</kbd>, stage with <kbd>s</kbd>, <kbd>c c</kbd>, <kbd>i</kbd> and the message, <kbd>C-c C-c</kbd>, then <kbd>P u</kbd> to push. On the server, <code>git pull</code>.</p></div></li>
     </ol>
     <div class="learned">
       <p><strong>Reading Lisp in five lines</strong></p>
@@ -580,9 +588,114 @@ emacs src/main/java/com/example/App.java</pre><button class="copy" type="button"
       <li><div><p>Repeat an edit with a vim macro: <kbd>qa</kbd>, make the change on one line, finish with <kbd>j0</kbd>, then <kbd>q</kbd>. <kbd>@a</kbd> replays it once, <kbd>@@</kbd> again, <kbd>10@a</kbd> ten times.</p></div></li>
       <li><div><p>Rename files the way you edit text: <kbd>SPC d j</kbd>, then <kbd>C-x C-q</kbd>. Edit the names (even <code>:%s/old/new/</code> works), then <kbd>C-c C-c</kbd> applies, or <kbd>C-c C-k</kbd> cancels.</p></div></li>
       <li><div><p>Review with <kbd>SPC g g</kbd>. <kbd>TAB</kbd> on a file opens its diff. <kbd>s</kbd> on one hunk stages only that hunk, and <kbd>u</kbd> unstages. For a few lines, select them with <kbd>v</kbd>, then <kbd>s</kbd>.</p></div></li>
-      <li><div><p><kbd>c c</kbd>, write what changed and why, <kbd>C-c C-c</kbd>. <kbd>P u</kbd> pushes. Whatever you didn't stage stays in your working copy for the next commit.</p></div></li>
+      <li><div><p><kbd>c c</kbd>, <kbd>i</kbd>, write what changed and why, <kbd>C-c C-c</kbd>. <kbd>P u</kbd> pushes. Whatever you didn't stage stays in your working copy for the next commit.</p></div></li>
     </ol>
     <p class="learned"><strong>New keys:</strong> <kbd>SPC p r</kbd> <kbd>qa</kbd> … <kbd>q</kbd> <kbd>@a</kbd> <kbd>@@</kbd> <kbd>C-x C-q</kbd> <kbd>TAB</kbd> <kbd>s</kbd> <kbd>u</kbd> <kbd>v</kbd> <kbd>c c</kbd> <kbd>P u</kbd></p>
+  </article>
+
+  <article class="tut" id="tut-magit">
+    <header class="stack">
+      <p class="label">tutorial 6 · about 20 minutes</p>
+      <h3>Magit: branch, stash, merge, resolve a conflict</h3>
+      <p>Goal: work on a branch, set unfinished work aside, merge it back and fix the conflict, all from magit's status buffer. Use the greet project from tutorial 1.</p>
+    </header>
+    <ol class="tsteps">
+      <li><div><p><kbd>SPC g g</kbd>. The status buffer is the hub: <kbd>j</kbd>/<kbd>k</kbd> move, <kbd>TAB</kbd> opens or closes a section, <kbd>gr</kbd> refreshes. Every letter opens a small menu that lists the next keys, so you can explore without memorising. <kbd>SPC g SPC</kbd> shows all of them.</p></div></li>
+      <li><div><p>New branch: <kbd>b c</kbd>, <kbd>RET</kbd> to start from where you are, and name it <code>excited</code>. The header now reads <code>Head: excited</code>.</p></div></li>
+      <li><div><p>In <code>greet.go</code>, change <code>"Hello, %s!"</code> to <code>"Hey, %s!"</code> and save. In magit, <kbd>TAB</kbd> on <code>greet.go</code> shows the diff, and <kbd>s</kbd> stages it. Then <kbd>c c</kbd>, <kbd>i</kbd>, the message, <kbd>C-c C-c</kbd>.</p></div></li>
+      <li><div><p>Set work aside: make another small edit, save, then <kbd>z z</kbd> and call it <code>wip</code>. Your working copy is clean again, and <kbd>z p</kbd> brings the edit back later.</p></div></li>
+      <li><div><p>Switch back: <kbd>b b</kbd>, pick <code>master</code>. Change the same line to <code>"Hi, %s!"</code> and commit it the same way.</p></div></li>
+      <li><div><p>Merge: <kbd>m m</kbd>, pick <code>excited</code>. Both branches changed the same line, so magit lists <code>greet.go</code> as <em>unmerged</em>.</p></div></li>
+      <li><div><p><kbd>RET</kbd> on <code>greet.go</code> opens it with conflict markers. <kbd>C-c ^ u</kbd> keeps your side (the upper one), <kbd>C-c ^ l</kbd> takes theirs, and <kbd>C-c ^ n</kbd> jumps to the next conflict. Save.</p></div></li>
+      <li><div><p>Back in magit, move onto <code>greet.go</code> and press <kbd>s</kbd>. Then <kbd>c c</kbd>: the merge message is already written, so just <kbd>C-c C-c</kbd>.</p></div></li>
+      <li><div><p>History: <kbd>l l</kbd> shows the log as a graph, <kbd>RET</kbd> on a commit shows what it changed, and <kbd>q</kbd> goes back. In any file, <kbd>SPC g b</kbd> shows who last changed each line; <kbd>q</kbd> leaves.</p></div></li>
+    </ol>
+    <p class="note">Branching, committing, the merge and the conflict were run here. The <kbd>z z</kbd> name prompt, the log and blame weren't.</p>
+    <p class="learned"><strong>New keys:</strong> <kbd>b c</kbd> <kbd>b b</kbd> <kbd>z z</kbd> <kbd>z p</kbd> <kbd>m m</kbd> <kbd>C-c ^ u</kbd> <kbd>C-c ^ l</kbd> <kbd>C-c ^ n</kbd> <kbd>l l</kbd> <kbd>SPC g b</kbd> <kbd>SPC g SPC</kbd></p>
+  </article>
+
+  <article class="tut" id="tut-eshell">
+    <header class="stack">
+      <p class="label">tutorial 7 · about 10 minutes</p>
+      <h3>Eshell: a shell that speaks Lisp</h3>
+      <p>Goal: use a shell where commands, Lisp and Emacs buffers mix, and where <code>cd</code> can take you onto your server.</p>
+    </header>
+    <ol class="tsteps">
+      <li><div><p>In a project, <kbd>SPC p e</kbd> opens Eshell at its root; anywhere else, <kbd>SPC e s</kbd>. <kbd>RET</kbd> runs the command in either vim state.</p></div></li>
+      <li><div><p>Ordinary commands work: <code>ls</code>, <code>git status</code>, <code>go test ./...</code>. The output is a normal buffer, so <kbd>/</kbd> searches it and <kbd>y</kbd> copies from it.</p></div></li>
+      <li><div><p>Lisp works at the same prompt: <code>(* 6 7)</code> prints <code>42</code>. You can mix the two: <code>echo (format-time-string "%A")</code> prints today's weekday.</p></div></li>
+      <li><div><p>Send output into a buffer: <code>ls *.go &gt; #&lt;buffer gofiles&gt;</code>. Then <kbd>SPC ,</kbd> and <code>gofiles</code> shows it.</p></div></li>
+      <li><div><p><code>grep -n Hello *.go</code> puts the results in a <code>*grep*</code> buffer where each hit is a link: <kbd>RET</kbd> or <kbd>M-g n</kbd>.</p></div></li>
+      <li><div><p><code>find-file go.mod</code> opens a file in Emacs straight from the prompt.</p></div></li>
+      <li><div><p><kbd>M-p</kbd> and <kbd>M-n</kbd> walk through the commands you ran before.</p></div></li>
+      <li><div><p>On your server: <code>cd /ssh:HOST:~</code> and Eshell carries on over SSH. <code>ls</code> lists remote files, and <code>find-file notes.txt</code> edits one with your local Emacs. This part of Emacs is called TRAMP.</p></div></li>
+    </ol>
+    <p class="note">Steps 1 and 4 to 6 were run here. The <code>echo</code> mix, the history keys and the SSH step weren't.</p>
+    <p class="learned"><strong>New keys:</strong> <kbd>SPC p e</kbd> <kbd>SPC e s</kbd> <kbd>M-p</kbd> <kbd>M-n</kbd>, plus <code>(lisp)</code>, <code>&gt; #&lt;buffer …&gt;</code>, <code>find-file</code> and <code>/ssh:</code> paths</p>
+  </article>
+
+  <article class="tut" id="tut-dired">
+    <header class="stack">
+      <p class="label">tutorial 8 · about 10 minutes</p>
+      <h3>Dired: manage files in two panes</h3>
+      <p>Goal: copy, move, rename and tidy files from the keyboard, the way a two-pane file manager works.</p>
+    </header>
+    <ol class="tsteps">
+      <li><div><p><kbd>SPC d j</kbd> opens the folder of the current file. <kbd>j</kbd>/<kbd>k</kbd> move, <kbd>l</kbd> opens, <kbd>h</kbd> goes up a folder.</p></div></li>
+      <li><div><p><kbd>+</kbd> makes a folder. Call it <code>archive</code>.</p></div></li>
+      <li><div><p>Mark files: <kbd>m</kbd> marks, <kbd>u</kbd> unmarks, <kbd>U</kbd> clears every mark, <kbd>t</kbd> flips them. <kbd>%m</kbd> marks by pattern: type <code>\.go$</code> for every Go file.</p></div></li>
+      <li><div><p>Two panes: <kbd>SPC w v</kbd> splits, then open <code>archive</code> in the right pane. Back in the left one, <kbd>C</kbd> copies the marked files. Dired suggests the other pane as the destination, so <kbd>RET</kbd> is enough. <kbd>r</kbd> moves or renames the same way.</p></div></li>
+      <li><div><p>Delete: <kbd>d</kbd> flags a file and <kbd>x</kbd> deletes everything flagged; <kbd>D</kbd> deletes the marked files at once. Both ask first, and deleted files are gone for good, not moved to a trash folder.</p></div></li>
+      <li><div><p>Run a command on the marked files: <kbd>X</kbd>, then <code>wc -l</code>. <kbd>Z</kbd> compresses or uncompresses a file.</p></div></li>
+      <li><div><p>Search and replace inside the marked files: <kbd>Q</kbd>, the regexp, the replacement, then the same <kbd>y</kbd> / <kbd>n</kbd> / <kbd>!</kbd> keys as <kbd>SPC p r</kbd>.</p></div></li>
+      <li><div><p><kbd>E</kbd> opens a file with its system app, such as an image viewer or a PDF reader (Emacs 30, in a window).</p></div></li>
+    </ol>
+    <p class="note">These keys were checked against evil-collection's dired bindings, not run step by step.</p>
+    <p class="learned"><strong>New keys:</strong> <kbd>+</kbd> <kbd>m</kbd> <kbd>u</kbd> <kbd>U</kbd> <kbd>t</kbd> <kbd>%m</kbd> <kbd>C</kbd> <kbd>r</kbd> <kbd>d</kbd> <kbd>x</kbd> <kbd>D</kbd> <kbd>X</kbd> <kbd>Z</kbd> <kbd>Q</kbd> <kbd>E</kbd></p>
+  </article>
+
+  <article class="tut" id="tut-org">
+    <header class="stack">
+      <p class="label">tutorial 9 · about 15 minutes</p>
+      <h3>Org: notes that link, tables that align, code that runs</h3>
+      <p>Goal: get comfortable with the Org basics behind <code>life.org</code> and <code>writing/</code>, in a practice file you delete afterwards.</p>
+    </header>
+    <ol class="tsteps">
+      <li><div><p><kbd>SPC .</kbd> and open <code>~/org/practice.org</code>. A new Org file gets a title and date header by itself.</p></div></li>
+      <li><div><p>Type <code>* Ideas</code> and, below it, <code>** First one</code>. <kbd>TAB</kbd> on a heading folds it; <kbd>S-TAB</kbd> cycles the whole file between an outline and everything.</p></div></li>
+      <li><div><p>A table: type <code>| name | lang |</code> and press <kbd>TAB</kbd>. Org lines it up and moves to the next cell. Fill a row, then <code>|-</code> and <kbd>TAB</kbd> draws a rule (so does <kbd>SPC m b -</kbd>).</p></div></li>
+      <li><div><p>A link: <kbd>C-c C-l</kbd>, type <code>file:~/code/greet/greet.go</code> or a web address, then a description. <kbd>RET</kbd> on the link follows it.</p></div></li>
+      <li><div><p>Make a heading a task with <kbd>SPC m t</kbd> (TODO, then NEXT, …). <kbd>SPC m d t</kbd> then <kbd>RET</kbd> inserts today's date.</p></div></li>
+      <li><div><p>Code that runs: <code>&lt;s</code> <kbd>TAB</kbd>, write <code>emacs-lisp</code> after <code>BEGIN_SRC</code>, put <code>(+ 1 2)</code> inside, then <kbd>C-c C-c</kbd> inside the block. Org asks once, then writes the result, <code>3</code>, under the block.</p></div></li>
+      <li><div><p>Capture without leaving your work: <kbd>SPC m c s</kbd> writes a spark at the top of <code>life.org</code>. <kbd>C-c C-c</kbd> saves it and takes you back; <kbd>C-c C-k</kbd> cancels.</p></div></li>
+      <li><div><p>Export: <kbd>SPC m e</kbd>, then <kbd>h o</kbd> writes an HTML page and opens it in your browser.</p></div></li>
+    </ol>
+    <p class="note">This follows standard Org behaviour and wasn't run step by step here.</p>
+    <p class="learned"><strong>New keys:</strong> <kbd>S-TAB</kbd> <kbd>C-c C-l</kbd> <kbd>SPC m t</kbd> <kbd>SPC m d t</kbd> <kbd>C-c C-c</kbd> <kbd>C-c C-k</kbd> <kbd>SPC m e</kbd></p>
+  </article>
+
+  <article class="tut" id="tut-pkg">
+    <header class="stack">
+      <p class="label">tutorial 10 · about 10 minutes</p>
+      <h3>Grow the config: add a package, then remove it</h3>
+      <p>Goal: add <code>markdown-mode</code> for README files the declarative way, configure it, keep both machines alike, and practise removing a package.</p>
+    </header>
+    <ol class="tsteps">
+      <li><div><p><kbd>SPC f c</kbd>, then under <code>;;; Packages</code> add <code>markdown-mode</code> to the list. It comes from NonGNU ELPA, one of the release archives.</p></div></li>
+      <li><div>
+        <p>Give it a block, for example under <code>;;; Programming</code>:</p>
+        <div class="cmdline"><pre id="c18">(use-package markdown-mode
+  :mode ("README\\.md\\'" . gfm-mode)   ; GitHub-flavoured for READMEs
+  :custom (markdown-fontify-code-blocks-natively t))</pre><button class="copy" type="button" data-copy="c18">Copy</button></div>
+      </div></li>
+      <li><div><p>Restart Emacs. Startup notices the missing package and installs it. Open <code>README.md</code>: headings and code blocks are coloured now.</p></div></li>
+      <li><div><p>See what it added: <kbd>SPC h m</kbd> lists the keys of the current mode.</p></div></li>
+      <li><div><p>Commit and push (<kbd>SPC p p</kbd>, the config, <kbd>m</kbd>, …). On the server, <code>git pull</code> and restart Emacs: it installs the same package there.</p></div></li>
+      <li><div><p>Practise removing it: delete the name and the block, restart, then <kbd>M-x package-autoremove</kbd>. It offers to delete <code>markdown-mode</code>; answer <kbd>y</kbd>.</p></div></li>
+      <li><div><p>About once a month, <kbd>M-x package-upgrade-all</kbd> on both machines keeps them current and alike.</p></div></li>
+    </ol>
+    <p class="note">Not run here, since it downloads a package. The install-on-startup and autoremove behaviour it relies on was tested when this config was built.</p>
+    <p class="learned"><strong>New keys:</strong> <kbd>SPC h m</kbd> <kbd>M-x package-autoremove</kbd> <kbd>M-x package-upgrade-all</kbd>, plus <code>:mode</code> and <code>:custom</code> in a <code>use-package</code> block</p>
   </article>
 </section>
 
@@ -889,6 +1002,21 @@ sdk install maven</pre><button class="copy" type="button" data-copy="c5">Copy</b
       ["SPC g i", "Make a folder a repository", "magit-init"],
       ["?", "Inside magit: every key", ""]
     ]},
+    { title: "Inside magit", same: "SPC g g, then", keys: [
+      ["s / u", "Stage / unstage the file or hunk under the cursor", "magit-stage"],
+      ["c c", "Commit: press i to type the message, C-c C-c to finish", "magit-commit-create"],
+      ["P u", "Push to the upstream branch (p works too)", "magit-push"],
+      ["F u", "Pull from the upstream branch", "magit-pull"],
+      ["b c / b b", "Create a branch / switch branch", "magit-branch"],
+      ["z z / z p", "Stash your changes / bring them back", "magit-stash"],
+      ["m m", "Merge a branch", "magit-merge"],
+      ["l l", "Log of this branch, as a graph", "magit-log"],
+      ["TAB", "Open or close a section, file diff or hunk", "magit-section-toggle"],
+      ["x", "Discard the change under the cursor (asks first)", "magit-delete-thing"],
+      ["gr", "Refresh", "magit-refresh"],
+      ["C-c ^ u / l", "In a conflicted file: keep yours / take theirs", "smerge-keep-upper"],
+      ["C-c ^ n", "Next conflict", "smerge-next"]
+    ]},
     { title: "Org and notes", same: "SPC m", keys: [
       ["SPC m c", "Capture: s spark, i learned, p place, q queue", "org-capture"],
       ["SPC m l", "Open life.org", "my/org-open-life"],
@@ -924,6 +1052,10 @@ sdk install maven</pre><button class="copy" type="button" data-copy="c5">Copy</b
       ["SPC d d", "Open any folder", "dired"],
       ["h", "Up a folder", "dired-up-directory"],
       ["l", "Open", "dired-find-file"],
+      ["m / u / U", "Mark / unmark / clear every mark", "dired-mark"],
+      ["%m", "Mark the files matching a pattern", "dired-mark-files-regexp"],
+      ["C / r / D", "Copy / move or rename / delete the marked files", "dired-do-copy"],
+      ["+", "New folder", "dired-create-directory"],
       ["E", "Open with the system app (Emacs 30)", "dired-do-open"],
       ["C-x C-q", "Rename files by editing the list; C-c C-c applies", "dired-toggle-read-only"]
     ]},
