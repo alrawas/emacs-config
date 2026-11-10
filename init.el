@@ -118,6 +118,12 @@
   :after evil
   :custom
   (evil-collection-key-blacklist '("SPC")) ; SPC stays the leader in every mode
+  ;; In shells and REPLs (eshell, ielm) RET runs the command in either
+  ;; state, like a terminal; S-RET still inserts a newline.  Out of the
+  ;; box, RET in insert state there only adds a line.
+  (evil-collection-binding-overrides
+   '((repl-submit :state (normal insert))
+     (repl-newline :enabled nil)))
   :config
   (evil-collection-init))
 
