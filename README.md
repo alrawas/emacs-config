@@ -4,9 +4,11 @@ A plain `init.el`, built-ins first, evil kept. One config for Emacs 29 and
 30, in a window or in a terminal (`emacs -nw`), on the laptop and over SSH.
 
 **Getting started:** open [`docs/index.html`](docs/index.html) in a browser
-(`xdg-open ~/.config/emacs/docs/index.html`). It has the first ten minutes,
-every key in a list you can filter, what's installed, and how to change
-things.
+(`xdg-open ~/.config/emacs/docs/index.html`), or online at
+https://alrawas.github.io/emacs-config/. It has the first ten minutes,
+every key in a list you can filter, five hands-on tutorials (Go, Java,
+navigating code, writing Lisp, big edits with magit), what's installed,
+and how to change things.
 
 ## Layout
 

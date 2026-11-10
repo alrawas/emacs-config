@@ -208,6 +208,26 @@ p { margin: 0; }
 .two ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.45rem; }
 footer { padding-block: 3.5rem 1rem; color: var(--muted); font-size: var(--step--1); font-family: var(--mono); }
 
+/* ---- tutorials ---- */
+.tut-index { display: grid; gap: 0.15rem; }
+.tut-index a { display: grid; grid-template-columns: 2rem 1fr; gap: 0.6rem; align-items: baseline; padding: 0.45rem 0.6rem; border-radius: 6px; text-decoration: none; color: var(--fg); }
+.tut-index a:hover { background: var(--bg-1); }
+.tut-index a span { font-family: var(--display); color: var(--accent); }
+.tut { max-width: 44rem; display: grid; gap: 1.1rem; padding-top: 2rem; margin-top: 1rem; border-top: 1px solid var(--line); min-width: 0; }
+.tut h3 { font-size: var(--step-1); }
+.tsteps { counter-reset: t; list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.1rem; }
+.tsteps > li { counter-increment: t; display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: 0.6rem; min-width: 0; }
+.tsteps > li::before { content: counter(t); font-family: var(--display); color: var(--accent); }
+.tsteps > li > div { display: grid; gap: 0.55rem; min-width: 0; }
+.part { font-family: var(--mono); font-size: var(--step--1); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.note { color: var(--muted); }
+.learned { background: var(--bg-1); border: 1px solid var(--line); border-radius: 6px; padding: 0.75rem 0.95rem; line-height: 2; }
+.learned p { line-height: 1.6; }
+.lisp5 { margin: 0.4rem 0 0; padding-left: 1.1rem; display: grid; gap: 0.35rem; line-height: 1.6; }
+.cmdline pre { tab-size: 4; }
+/* Show code exactly as typed: no != turning into ≠. */
+code, kbd, pre, .mono, .row dt, .row .cmd, .frame { font-variant-ligatures: none; font-feature-settings: "calt" 0, "liga" 0; }
+
 /* ---- the mode line, fixed to the bottom like Emacs ---- */
 .modeline {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
@@ -364,6 +384,206 @@ footer { padding-block: 3.5rem 1rem; color: var(--muted); font-size: var(--step-
       <p><kbd>SPC a</kbd> opens <code>todo.txt</code>, the same file tuxedo edits. <kbd>SPC g g</kbd> shows the repo's status: <kbd>s</kbd> stages, <kbd>c</kbd> commits, <kbd>P</kbd> pushes, and each opens a small menu that shows the next key.</p>
     </article>
   </div>
+</section>
+
+<section id="tutorials" class="stack">
+  <div class="col stack">
+    <h2>Tutorials <span class="outline">;;; tutorials</span></h2>
+    <p>Five goals, each building on the one before. Every step uses a real key from your config. The Go, single-file Java and Lisp steps were run in this setup before being written down.</p>
+    <nav class="tut-index" aria-label="Tutorials">
+      <a href="#tut-go"><span>1</span>Go: an empty folder to passing tests</a>
+      <a href="#tut-java"><span>2</span>Java: one file, then a Maven project</a>
+      <a href="#tut-nav"><span>3</span>Find your way around code you didn't write</a>
+      <a href="#tut-lisp"><span>4</span>Teach Emacs a new trick in Lisp</a>
+      <a href="#tut-scale"><span>5</span>Change a lot at once, then ship it</a>
+    </nav>
+  </div>
+
+  <article class="tut" id="tut-go">
+    <header class="stack">
+      <p class="label">tutorial 1 · about 15 minutes</p>
+      <h3>Go: an empty folder to passing tests</h3>
+      <p>Goal: a small package with a table-driven test. Watch it fail, jump straight to the failure, fix it, rename safely, commit.</p>
+    </header>
+    <ol class="tsteps">
+      <li><div>
+        <p>In a terminal, make the module and open the first file:</p>
+        <div class="cmdline"><pre id="c6">mkdir -p ~/code/greet &amp;&amp; cd ~/code/greet
+go mod init example.com/greet
+emacs greet.go</pre><button class="copy" type="button" data-copy="c6">Copy</button></div>
+      </div></li>
+      <li><div><p>Press <kbd>SPC g i</kbd>, then <kbd>RET</kbd>. The folder is now a git repo, and that is what makes it a project for every <kbd>SPC p</kbd> key. <kbd>q</kbd> closes magit.</p></div></li>
+      <li><div>
+        <p>Press <kbd>i</kbd> and type the function. Completion pops up after <code>fmt.Sp</code>. Save with <kbd>:w</kbd>; gofmt tidies the spacing.</p>
+        <div class="cmdline"><pre id="c7">package greet
+
+import "fmt"
+
+// Greet says hello to name.
+func Greet(name string) string {
+	return fmt.Sprintf("Hello, %s", name)
+}</pre><button class="copy" type="button" data-copy="c7">Copy</button></div>
+      </div></li>
+      <li><div>
+        <p><kbd>SPC .</kbd> and open <code>greet_test.go</code>. Write a test with two cases:</p>
+        <div class="cmdline"><pre id="c8">package greet
+
+import "testing"
+
+func TestGreet(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"Abed", "Hello, Abed!"},
+		{"", "Hello, stranger!"},
+	}
+	for _, c := range cases {
+		if got := Greet(c.in); got != c.want {
+			t.Errorf("Greet(%q) = %q, want %q", c.in, got, c.want)
+		}
+	}
+}</pre><button class="copy" type="button" data-copy="c8">Copy</button></div>
+      </div></li>
+      <li><div><p><kbd>SPC p c</kbd>, clear the suggested <code>make -k</code> with <kbd>C-a C-k</kbd>, type <code>go test ./...</code> and <kbd>RET</kbd>. Both cases fail, and each failure is a link. <kbd>M-g n</kbd> jumps to the first one in <code>greet_test.go</code>; press it again for the next.</p></div></li>
+      <li><div>
+        <p>Fix <code>Greet</code>, save, and press <kbd>SPC p c</kbd> then <kbd>RET</kbd>: it remembers the command. Inside the <code>*compilation*</code> window, <kbd>gr</kbd> reruns it too. You get <code>ok example.com/greet</code>.</p>
+        <div class="cmdline"><pre id="c9">func Greet(name string) string {
+	if name == "" {
+		name = "stranger"
+	}
+	return fmt.Sprintf("Hello, %s!", name)
+}</pre><button class="copy" type="button" data-copy="c9">Copy</button></div>
+      </div></li>
+      <li><div><p>Put the cursor on <code>Greet</code> and press <kbd>SPC c r</kbd>, then type <code>Hello</code>. gopls renames it in both files, never touching strings that merely contain the word. <kbd>gr</kbd> on it lists every use; <kbd>K</kbd> shows its doc comment.</p></div></li>
+      <li><div><p>Commit: <kbd>SPC g g</kbd>, put the cursor on <em>Untracked files</em> and press <kbd>s</kbd> to stage them all, then <kbd>c c</kbd>. Write the message and finish with <kbd>C-c C-c</kbd>.</p></div></li>
+    </ol>
+    <p class="learned"><strong>New keys:</strong> <kbd>SPC g i</kbd> <kbd>SPC p c</kbd> <kbd>M-g n</kbd> <kbd>M-g p</kbd> <kbd>gr</kbd> (rerun, in <code>*compilation*</code>) <kbd>SPC c r</kbd> <kbd>gr</kbd> (every use, in code) <kbd>K</kbd> <kbd>SPC g g</kbd></p>
+  </article>
+
+  <article class="tut" id="tut-java">
+    <header class="stack">
+      <p class="label">tutorial 2 · about 20 minutes</p>
+      <h3>Java: one file, then a Maven project</h3>
+      <p>Goal: compile and run a single file with a deliberate mistake, then move to a Maven project with tests, the way most real Java code is built.</p>
+    </header>
+    <p class="part">Part A · a single file</p>
+    <ol class="tsteps">
+      <li><div>
+        <div class="cmdline"><pre id="c10">mkdir -p ~/code/hello &amp;&amp; cd ~/code/hello &amp;&amp; git init
+emacs Hello.java</pre><button class="copy" type="button" data-copy="c10">Copy</button></div>
+      </div></li>
+      <li><div>
+        <p>Type this, typo included. Within a few seconds jdtls starts, <code>[eglot:hello]</code> appears in the mode line, and <code>nme</code> gets underlined. <kbd>SPC c d</kbd> lists the errors in this file.</p>
+        <div class="cmdline"><pre id="c11">public class Hello {
+    public static void main(String[] args) {
+        String name = args.length &gt; 0 ? args[0] : "Abed";
+        System.out.println("Hello, " + nme);
+    }
+}</pre><button class="copy" type="button" data-copy="c11">Copy</button></div>
+      </div></li>
+      <li><div><p><kbd>SPC p c</kbd>, clear the prompt, run <code>javac Hello.java</code>. The <em>cannot find symbol</em> error is a link: <kbd>M-g n</kbd> lands on line 4.</p></div></li>
+      <li><div><p>Fix it (<kbd>cw</kbd> on <code>nme</code>, type <code>name</code>), save, then <kbd>SPC p c</kbd> with <code>java Hello.java World</code>. Since Java 11 a single source file runs directly, with no separate compile step. You see <code>Hello, World</code>.</p></div></li>
+    </ol>
+    <p class="part">Part B · a Maven project</p>
+    <p class="note">Maven isn't installed yet, so this half hasn't been run in your setup. These are the standard commands.</p>
+    <ol class="tsteps" style="counter-reset: t 4">
+      <li><div>
+        <div class="cmdline"><pre id="c12">sdk install maven
+cd ~/code
+mvn archetype:generate -DgroupId=com.example -DartifactId=demo \
+  -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+cd demo &amp;&amp; git init
+emacs src/main/java/com/example/App.java</pre><button class="copy" type="button" data-copy="c12">Copy</button></div>
+      </div></li>
+      <li><div><p>jdtls reads <code>pom.xml</code> and fetches the dependencies the first time, which can take a minute; the mode line shows when it's busy. After that, completion knows your libraries too.</p></div></li>
+      <li><div><p><kbd>SPC p c</kbd> with <code>mvn -q test</code>. Compiler errors appear as <code>[ERROR] …/App.java:[12,5] …</code> and are links, so <kbd>M-g n</kbd> works the same as with Go. To run one test class: <code>mvn -q test -Dtest=AppTest</code>.</p></div></li>
+      <li><div><p>On an error, <kbd>SPC c a</kbd> offers fixes such as adding an import or creating the missing method. <kbd>SPC c r</kbd> renames across classes.</p></div></li>
+    </ol>
+    <p class="note"><kbd>gd</kbd> works across your own classes. Jumping into JDK or library classes needs an extra package (jdtls serves them as <code>jdt://</code> class files), which this config doesn't set up.</p>
+    <p class="learned"><strong>New keys:</strong> <kbd>SPC c d</kbd> <kbd>SPC c a</kbd> <kbd>cw</kbd>, plus everything from tutorial 1, which works the same way here.</p>
+  </article>
+
+  <article class="tut" id="tut-nav">
+    <header class="stack">
+      <p class="label">tutorial 3 · about 10 minutes</p>
+      <h3>Find your way around code you didn't write</h3>
+      <p>Goal: move through an unfamiliar codebase by meaning instead of by scrolling. Start in the greet project from tutorial 1.</p>
+    </header>
+    <ol class="tsteps">
+      <li><div><p>In <code>greet.go</code>, put the cursor on <code>Sprintf</code> and press <kbd>gd</kbd>. You are now inside Go's own source, <code>fmt/print.go</code>. <kbd>C-o</kbd> takes you back.</p></div></li>
+      <li><div><p>Go there again and press <kbd>SPC s i</kbd>: every function in the file, filtered as you type. Try <code>Fprint</code>.</p></div></li>
+      <li><div><p>Back in your project, on <code>Hello</code> press <kbd>gr</kbd>: every use, in a list. <kbd>RET</kbd> opens one. <kbd>M-g n</kbd> and <kbd>M-g p</kbd> walk the list without leaving your code.</p></div></li>
+      <li><div><p><kbd>SPC s r</kbd> and type <code>want</code>: ripgrep across the whole project, previewing each hit as you move.</p></div></li>
+      <li><div><p><kbd>SPC w v</kbd> splits the window. Then <kbd>SPC p f</kbd> opens <code>greet_test.go</code> on the right, <kbd>SPC w h</kbd> / <kbd>SPC w l</kbd> hop between the halves, and <kbd>SPC w o</kbd> goes back to one window.</p></div></li>
+      <li><div><p>Found a spot you'll need again? <kbd>SPC r m</kbd> and give it a name. <kbd>SPC r b</kbd> brings you back from anywhere, even after a restart.</p></div></li>
+      <li><div><p><kbd>SPC ,</kbd> then <kbd>b SPC</kbd> for open buffers only, or <kbd>m SPC</kbd> for bookmarks only. <kbd>C-^</kbd> flips between your last two buffers.</p></div></li>
+    </ol>
+    <p class="learned"><strong>New keys:</strong> <kbd>gd</kbd> <kbd>C-o</kbd> <kbd>SPC s i</kbd> <kbd>gr</kbd> <kbd>M-g n</kbd> <kbd>SPC s r</kbd> <kbd>SPC w v</kbd> <kbd>SPC w o</kbd> <kbd>SPC r m</kbd> <kbd>SPC r b</kbd> <kbd>C-^</kbd></p>
+  </article>
+
+  <article class="tut" id="tut-lisp">
+    <header class="stack">
+      <p class="label">tutorial 4 · about 15 minutes</p>
+      <h3>Teach Emacs a new trick in Lisp</h3>
+      <p>Goal: write your own command, try it while Emacs runs, give it a key under <kbd>SPC i</kbd>, and keep it in your config.</p>
+    </header>
+    <ol class="tsteps">
+      <li><div>
+        <p><kbd>SPC b x</kbd> opens <code>*scratch*</code>. Press <kbd>i</kbd> and type this. When you type <code>(</code>, Emacs adds the <code>)</code>; typing <code>)</code> over it just steps past.</p>
+        <div class="cmdline"><pre id="c13">(defun my/insert-date (with-time)
+  "Insert today's date.  With C-u, the time too."
+  (interactive "P")
+  (insert (format-time-string
+           (if with-time "%Y-%m-%d %H:%M" "%Y-%m-%d"))))</pre><button class="copy" type="button" data-copy="c13">Copy</button></div>
+        <p><kbd>ESC</kbd>, cursor anywhere inside it, <kbd>SPC e d</kbd>. The echo area says <code>my/insert-date</code>: the command exists now.</p>
+      </div></li>
+      <li><div><p>Run it by name with <kbd>SPC SPC</kbd> <code>my/insert-date</code>. Then <kbd>SPC h f</kbd> <code>my/insert-date</code> shows your own docstring: Emacs documents your code like its own.</p></div></li>
+      <li><div>
+        <p>Give it a key while Emacs runs: type this line and press <kbd>SPC e d</kbd> on it.</p>
+        <div class="cmdline"><pre id="c14">(keymap-set my/leader-map "i d" #'my/insert-date)</pre><button class="copy" type="button" data-copy="c14">Copy</button></div>
+        <p>In insert state, <kbd>M-SPC i d</kbd> types today's date and <kbd>C-u M-SPC i d</kbd> adds the time. (In normal state the text lands before the cursor, which is why insert state suits it.) This works at once because <code>keymap-set</code> changes the live map. Editing the big <code>my/leader-map</code> block in <code>init.el</code> builds a new map, and that's why those edits need a restart.</p>
+      </div></li>
+      <li><div>
+        <p>Keep it: <kbd>SPC f c</kbd>, find <code>;;; Leader key</code>, paste the <code>defun</code> under <code>my/sudo-this-file</code>, and add this line inside <code>my/leader-map</code>:</p>
+        <div class="cmdline"><pre id="c15">"i" (cons "insert" (define-keymap "d" #'my/insert-date))</pre><button class="copy" type="button" data-copy="c15">Copy</button></div>
+        <p>Restart Emacs. <kbd>SPC</kbd> now shows <code>i</code> as <code>+insert</code>.</p>
+      </div></li>
+      <li><div>
+        <p>Stretch: a command that copies the current file's path. Thanks to OSC 52 it reaches your laptop's clipboard even over SSH. Add it the same way, as <code>"y" #'my/copy-file-path</code> inside the <code>"f"</code> group, so it lives at <kbd>SPC f y</kbd>.</p>
+        <div class="cmdline"><pre id="c16">(defun my/copy-file-path ()
+  "Copy this buffer's file path, ready to paste anywhere."
+  (interactive)
+  (kill-new buffer-file-name)
+  (message "Copied %s" buffer-file-name))</pre><button class="copy" type="button" data-copy="c16">Copy</button></div>
+      </div></li>
+      <li><div><p>Commit and share it: <kbd>SPC p p</kbd>, pick the Emacs config, <kbd>m</kbd>, stage with <kbd>s</kbd>, <kbd>c c</kbd>, message, <kbd>C-c C-c</kbd>, then <kbd>P u</kbd> to push. On the server, <code>git pull</code>.</p></div></li>
+    </ol>
+    <div class="learned">
+      <p><strong>Reading Lisp in five lines</strong></p>
+      <ul class="lisp5">
+        <li><code>(f a b)</code> calls <code>f</code> with <code>a</code> and <code>b</code>. Code and data are both lists.</li>
+        <li><code>(defun name (args) "doc" (interactive) body)</code> makes a command you can bind to a key.</li>
+        <li><code>(setq x 1)</code> sets a variable; <code>(let ((x 1)) …)</code> makes one that only lives inside.</li>
+        <li><kbd>SPC e e</kbd> evaluates anything you type; <kbd>M-x ielm</kbd> is a Lisp prompt to play in.</li>
+        <li><kbd>SPC h f</kbd> and <kbd>SPC h v</kbd> explain any function or variable, with a link to its source.</li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="tut" id="tut-scale">
+    <header class="stack">
+      <p class="label">tutorial 5 · about 15 minutes</p>
+      <h3>Change a lot at once, then ship it</h3>
+      <p>Goal: make a sweeping change safely, review it piece by piece, and commit only what you mean.</p>
+    </header>
+    <ol class="tsteps">
+      <li><div><p>Rename by meaning: <kbd>SPC c r</kbd> on a symbol in Go or Java renames it in every file. Comments and strings that happen to contain the word stay as they are.</p></div></li>
+      <li><div><p>Replace text across the project: <kbd>SPC p r</kbd>, type a regexp, then its replacement. At each match: <kbd>y</kbd> replaces, <kbd>n</kbd> skips, <kbd>!</kbd> replaces the rest in this file, <kbd>q</kbd> stops.</p></div></li>
+      <li><div><p>Repeat an edit with a vim macro: <kbd>qa</kbd>, make the change on one line, finish with <kbd>j0</kbd>, then <kbd>q</kbd>. <kbd>@a</kbd> replays it once, <kbd>@@</kbd> again, <kbd>10@a</kbd> ten times.</p></div></li>
+      <li><div><p>Rename files the way you edit text: <kbd>SPC d j</kbd>, then <kbd>C-x C-q</kbd>. Edit the names (even <code>:%s/old/new/</code> works), then <kbd>C-c C-c</kbd> applies, or <kbd>C-c C-k</kbd> cancels.</p></div></li>
+      <li><div><p>Review with <kbd>SPC g g</kbd>. <kbd>TAB</kbd> on a file opens its diff. <kbd>s</kbd> on one hunk stages only that hunk, and <kbd>u</kbd> unstages. For a few lines, select them with <kbd>v</kbd>, then <kbd>s</kbd>.</p></div></li>
+      <li><div><p><kbd>c c</kbd>, write what changed and why, <kbd>C-c C-c</kbd>. <kbd>P u</kbd> pushes. Whatever you didn't stage stays in your working copy for the next commit.</p></div></li>
+    </ol>
+    <p class="learned"><strong>New keys:</strong> <kbd>SPC p r</kbd> <kbd>qa</kbd> … <kbd>q</kbd> <kbd>@a</kbd> <kbd>@@</kbd> <kbd>C-x C-q</kbd> <kbd>TAB</kbd> <kbd>s</kbd> <kbd>u</kbd> <kbd>v</kbd> <kbd>c c</kbd> <kbd>P u</kbd></p>
+  </article>
 </section>
 
 <section id="installed" class="stack">
@@ -531,6 +751,7 @@ sdk install maven</pre><button class="copy" type="button" data-copy="c5">Copy</b
       <a href="#leader">Leader</a>
       <a href="#keys">Keys</a>
       <a href="#recipes">Recipes</a>
+      <a href="#tutorials">Tutorials</a>
       <a href="#installed">Installed</a>
       <a href="#files">Files</a>
       <a href="#changing">Changing</a>
@@ -636,8 +857,11 @@ sdk install maven</pre><button class="copy" type="button" data-copy="c5">Copy</b
     ]},
     { title: "Code", same: "SPC c, plus vim keys", keys: [
       ["gd", "Go to definition", "evil-goto-definition"],
+      ["gr", "Every use of this symbol", "xref-find-references"],
       ["K", "Show documentation", "eldoc-doc-buffer"],
       ["C-o", "Jump back", "evil-jump-backward"],
+      ["M-g n", "Next error, test failure or search hit; M-g p goes back", "next-error"],
+      ["gr in *compilation*", "Run the same build or test again", "recompile"],
       ["SPC c a", "Code actions: fix, organize imports", "eglot-code-actions"],
       ["SPC c r", "Rename a symbol everywhere", "eglot-rename"],
       ["SPC c f", "Format the buffer", "eglot-format-buffer"],
